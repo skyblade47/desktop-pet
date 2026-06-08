@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron'
 import path from 'path'
 import { setupIPC } from './ipc'
 import { createTray, destroyTray } from './tray'
+import { SyncManager } from './sync/syncManager'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -42,8 +43,35 @@ const createWindow = () => {
   setupIPC()
 }
 
+/**
+ * 初始化同步服务
+ */
+const initSyncService = async () => {
+  try {
+    const syncManager = SyncManager.getInstance()
+    await syncManager.init({
+      enabled: true,
+      autoSync: true,
+      syncInterval: 5,
+      deviceName: '桌面宠物',
+    }, {
+      onInspirationSynced: (inspiration) => {
+        console.log('[Main] Inspiration synced:', inspiration.id)
+      },
+      onDevicesChanged: (devices) => {
+        console.log('[Main] Devices changed:', devices.length)
+      },
+    })
+  } catch (error) {
+    console.error('[Main] Failed to initialize sync service:', error)
+  }
+}
+
 // 应用准备就绪
-app.whenReady().then(createWindow)
+app.whenReady().then(async () => {
+  createWindow()
+  await initSyncService()
+})
 
 // 所有窗口关闭时（macOS 除外）
 app.on('window-all-closed', () => {
@@ -60,6 +88,13 @@ app.on('activate', () => {
 })
 
 // 应用退出前
-app.on('before-quit', () => {
+app.on('before-quit', async () => {
   destroyTray()
+  // 关闭同步服务
+  try {
+    const syncManager = SyncManager.getInstance()
+    await syncManager.shutdown()
+  } catch (error) {
+    console.error('[Main] Error shutting down sync service:', error)
+  }
 })

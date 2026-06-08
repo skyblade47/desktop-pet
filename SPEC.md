@@ -9,7 +9,8 @@
 3. [组件接口规范](#3-组件接口规范)
 4. [配置规范](#4-配置规范)
 5. [状态管理规范](#5-状态管理规范)
-6. [命名规范](#6-命名规范)
+6. [局域网同步规范](#6-局域网同步规范)
+7. [命名规范](#7-命名规范)
 
 ---
 
@@ -98,7 +99,72 @@ export interface SyncApiConfig {
 }
 ```
 
-### 1.2 状态类型
+### 1.2 同步相关类型
+
+#### SyncInspiration（同步灵感）
+
+```typescript
+/**
+ * 同步灵感数据结构（与灵感调酒师、AI写作教练一致）
+ */
+export interface SyncInspiration {
+  id: string
+  title?: string
+  content: string
+  tags: string[]
+  source: 'desktop-pet' | 'inspiration-bartender' | 'writing-coach'
+  sourceApp: string
+  createdAt: string
+  updatedAt: string
+  syncStatus: 'local' | 'pending' | 'synced'
+  syncHistory: Array<{
+    to: string
+    at: string
+    success: boolean
+  }>
+  checksum: string
+  original?: {
+    chatHistory?: Array<{
+      role: string
+      content: string
+      timestamp: string
+    }>
+    glassType?: string
+    completion?: number
+    rawInput?: any
+  }
+}
+
+/**
+ * 设备信息
+ */
+export interface SyncDevice {
+  id: string
+  name: string
+  type: 'desktop-pet' | 'inspiration-bartender' | 'writing-coach'
+  ip: string
+  port: number
+  lastSeen: string
+  capabilities: {
+    canReceive: boolean
+    canSend: boolean
+  }
+  version: string
+  url: string
+}
+
+/**
+ * 同步配置
+ */
+export interface SyncConfig {
+  enabled: boolean
+  autoSync: boolean
+  syncInterval: number
+  deviceName: string
+}
+```
+
+### 1.3 状态类型
 
 #### ChatState（聊天状态）
 
@@ -154,7 +220,7 @@ export interface InspirationState {
 }
 ```
 
-### 1.3 组件 Props 类型
+### 1.4 组件 Props 类型
 
 #### FloatingWidgetProps
 
@@ -206,9 +272,9 @@ export interface SettingsPanelProps {
 }
 ```
 
-### 1.4 Hook 返回类型
+### 1.5 Hook 返回类型
 
-#### useChat 返回值
+#### UseChatReturn
 
 ```typescript
 /**
@@ -226,13 +292,21 @@ export interface UseChatReturn {
   /** 清空消息 */
   clearMessages: () => void
   /** 保存为灵感 */
-  saveAsInspiration: (content: string, tags?: string[]) => Inspiration
+  saveAsInspiration: (content: string, tags?: string[]) => Promise<Inspiration>
 }
 ```
 
-#### useLocalModel 返回值
+#### UseLocalModelReturn
 
 ```typescript
+/**
+ * 聊天消息格式
+ */
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+}
+
 /**
  * useLocalModel Hook 返回值
  */
@@ -246,12 +320,6 @@ export interface UseLocalModelReturn {
   testConnection: () => Promise<boolean>
   /** 是否已连接 */
   isConnected: boolean
-}
-
-/** 聊天消息格式 */
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system'
-  content: string
 }
 ```
 
@@ -280,11 +348,11 @@ POST {baseUrl}/chat/completions
 
 ```typescript
 {
-  model: string,           // 模型名称
-  messages: ChatMessage[], // 消息列表
-  stream?: boolean,        // 是否流式输出
-  temperature?: number,    // 温度参数（可选）
-  max_tokens?: number      // 最大令牌数（可选）
+  model: string,
+  messages: ChatMessage[],
+  stream?: boolean,
+  temperature?: number,
+  max_tokens?: number
 }
 ```
 
@@ -312,15 +380,6 @@ POST {baseUrl}/chat/completions
 }
 ```
 
-**响应（流式）**
-
-```
-data: {"id":"...","choices":[{"index":0,"delta":{"content":"..."}}]}
-data: {"id":"...","choices":[{"index":0,"delta":{"content":"..."}}]}
-...
-data: [DONE]
-```
-
 #### 模型列表接口
 
 ```
@@ -335,57 +394,60 @@ GET {baseUrl}/models
 }
 ```
 
-**响应**
+### 2.2 同步 API（局域网）
 
-```typescript
+#### 设备信息接口
+
+```
+GET /api/info
+```
+
+**响应**:
+```json
 {
-  object: 'list',
-  data: [{
-    id: string,
-    object: 'model',
-    created: number,
-    owned_by: string
-  }]
+  "device": {
+    "id": "uuid",
+    "name": "桌面宠物",
+    "type": "desktop-pet",
+    "version": "1.0.0"
+  },
+  "api": {
+    "version": "1.0.0",
+    "endpoints": ["/api/info", "/api/inspirations"]
+  }
 }
 ```
 
-### 2.2 同步 API
+#### 获取灵感列表
+
+```
+GET /api/inspirations?since=2024-01-01T00:00:00Z
+```
 
 #### 推送灵感
 
 ```
-POST {inspirationBartenderUrl}/api/inspirations
-```
+POST /api/inspirations
+Content-Type: application/json
 
-**请求头**
-
-```typescript
 {
-  'Content-Type': 'application/json'
+  "inspirations": SyncInspiration[],
+  "source": "desktop-pet"
 }
 ```
 
-**请求体**
+### 2.3 IPC 接口（主进程与渲染进程）
 
-```typescript
-{
-  id: string,
-  content: string,
-  tags: string[],
-  createdAt: string, // ISO 8601 格式
-  updatedAt: string  // ISO 8601 格式
-}
-```
-
-**响应**
-
-```typescript
-{
-  success: boolean,
-  id?: string,
-  error?: string
-}
-```
+| 接口名 | 用途 | 参数 | 返回值 |
+|--------|------|------|--------|
+| `ping` | 测试通信 | 无 | `'pong'` |
+| `get-version` | 获取版本 | 无 | 版本号 |
+| `sync-add-inspiration` | 添加灵感到同步队列 | `Inspiration` | `{ success: boolean, data?: SyncInspiration }` |
+| `sync-trigger` | 手动触发同步 | 无 | `{ success: boolean }` |
+| `sync-get-devices` | 获取已发现设备 | 无 | `{ success: boolean, devices: SyncDevice[] }` |
+| `sync-get-queue` | 获取同步队列 | 无 | `{ success: boolean, queue: SyncInspiration[] }` |
+| `sync-get-sent` | 获取已发送灵感 | 无 | `{ success: boolean, sent: SyncInspiration[] }` |
+| `sync-set-interval` | 设置同步间隔 | `minutes: number` | `{ success: boolean }` |
 
 ---
 
@@ -397,10 +459,6 @@ POST {inspirationBartenderUrl}/api/inspirations
 import React from 'react'
 import { FloatingWidgetProps } from '../types'
 
-/**
- * 浮动小部件组件
- * 可拖动的小球，点击展开聊天窗口
- */
 const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }) => {
   // 实现...
 }
@@ -409,7 +467,6 @@ export default FloatingWidget
 ```
 
 **功能要求**
-
 - 可在屏幕任意位置拖动
 - 左键点击：触发 onClick
 - 右键点击：阻止默认菜单，触发 onRightClick
@@ -423,10 +480,6 @@ export default FloatingWidget
 import React from 'react'
 import { ChatWindowProps } from '../types'
 
-/**
- * 聊天窗口组件
- * 显示对话历史和输入框
- */
 const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   // 实现...
 }
@@ -435,11 +488,10 @@ export default ChatWindow
 ```
 
 **功能要求**
-
 - 固定位置显示（右侧顶部）
 - 标题栏：图标 + 标题 + 关闭按钮
 - 消息列表区域：可滚动
-- 快捷操作区：保存灵感按钮
+- 快捷操作区：保存灵感按钮（带状态反馈）
 - 输入区：文本框 + 发送按钮
 - 支持 Enter 发送，Shift+Enter 换行
 - 禁用状态：加载时输入框禁用
@@ -451,10 +503,6 @@ export default ChatWindow
 import React from 'react'
 import { MessageBubbleProps } from '../types'
 
-/**
- * 消息气泡组件
- * 显示单条聊天消息
- */
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   // 实现...
 }
@@ -463,7 +511,6 @@ export default MessageBubble
 ```
 
 **功能要求**
-
 - 用户消息：右侧显示，渐变背景
 - 助手消息：左侧显示，深色背景
 - 时间戳显示
@@ -476,10 +523,6 @@ export default MessageBubble
 import React from 'react'
 import { SettingsPanelProps } from '../types'
 
-/**
- * 设置面板组件
- * 配置 API 和同步设置
- */
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
   // 实现...
 }
@@ -488,7 +531,6 @@ export default SettingsPanel
 ```
 
 **功能要求**
-
 - 模态框显示
 - 背景遮罩
 - 表单字段：API 地址、API Key、模型名称、灵感调酒师地址
@@ -514,23 +556,24 @@ export const defaultConfig: AppConfig = {
 }
 ```
 
-### 4.2 环境变量
+### 4.2 同步配置
 
-```bash
-# 本地模型 API
-MODEL_API_BASE_URL=http://localhost:11434/v1
-MODEL_API_KEY=ollama
-MODEL_API_MODEL_NAME=llama3.2
-
-# 同步 API
-SYNC_API_INSPIRATION_BARTENDER_URL=http://localhost:3000
+```typescript
+export const defaultSyncConfig: SyncConfig = {
+  enabled: true,
+  autoSync: true,
+  syncInterval: 5,
+  deviceName: '桌面宠物',
+}
 ```
 
-### 4.3 持久化存储
+### 4.3 端口分配
 
-- 使用 localStorage 存储配置
-- Storage Key: `desktop-pet-storage`
-- 数据格式：JSON
+| 应用 | 端口 | 角色 |
+|------|------|------|
+| 桌面宠物 | 3001 | 发送方 |
+| 灵感调酒师 | 3002 | 中转方 |
+| AI写作教练 | 3003 | 接收方 |
 
 ---
 
@@ -545,7 +588,6 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 export const useAppStore = create<ChatState & ConfigState & InspirationState>()(
   persist(
     (set, get) => ({
-      // Chat State
       messages: [],
       isLoading: false,
       addMessage: (message) =>
@@ -553,12 +595,10 @@ export const useAppStore = create<ChatState & ConfigState & InspirationState>()(
       clearMessages: () => set({ messages: [] }),
       setIsLoading: (loading) => set({ isLoading: loading }),
 
-      // Config State
       config: defaultConfig,
       setConfig: (newConfig) =>
         set((state) => ({ config: { ...state.config, ...newConfig } })),
 
-      // Inspiration State
       inspirations: [],
       addInspiration: (inspiration) =>
         set((state) => ({ inspirations: [...state.inspirations, inspiration] })),
@@ -587,48 +627,100 @@ export const useAppStore = create<ChatState & ConfigState & InspirationState>()(
 )
 ```
 
-### 5.2 状态更新规则
+---
 
-1. **消息状态**
-   - 添加消息：追加到 messages 数组
-   - 清空消息：重置 messages 为空数组
-   - 加载状态：控制输入框和发送按钮
+## 6. 局域网同步规范
 
-2. **配置状态**
-   - 保存配置：合并到现有配置
-   - 重置配置：使用默认配置
+### 6.1 同步方向
 
-3. **灵感状态**
-   - 添加灵感：追加到 inspirations 数组
-   - 更新灵感：根据 id 更新对应项
-   - 删除灵感：根据 id 过滤数组
-   - 标记同步：更新状态为 'synced'
+```
+桌面宠物 (Desktop Pet) [端口: 3001]
+    ↓ [单向]
+灵感调酒师 (Inspiration Bartender) [端口: 3002]
+    ↓ [单向]
+AI写作教练 (AI Writing Coach) [端口: 3003]
+```
+
+### 6.2 设计原则
+
+- **单向数据流**: 避免数据冲突，明确流向
+- **局域网优先**: 无需云服务，本地网络即可同步
+- **发现机制**: 使用 mDNS/Zeroconf 自动发现设备
+- **数据完整性**: 校验和 + 增量同步
+- **离线优先**: 优先本地存储，网络恢复后自动同步
+
+### 6.3 服务发现
+
+- **服务类型**: `_ai-writing-sync._tcp.local.`
+- **TXT 记录**: `version`, `type`, `port`, `name`
+- **发现流程**: 启动时广播自身服务 → 监听网络 → 保存设备列表 → 定期更新
+
+### 6.4 同步流程
+
+```typescript
+// 1. 发现灵感调酒师设备
+const devices = await discovery.getDevices('inspiration-bartender')
+
+// 2. 获取待同步灵感
+const pending = await getPendingInspirations()
+
+// 3. 推送到灵感调酒师
+for (const device of devices) {
+  const result = await http.post(`${device.url}/api/inspirations`, {
+    inspirations: pending,
+    source: 'desktop-pet'
+  })
+
+  // 4. 标记为已同步
+  if (result.success) {
+    await markAsSynced(pending.map(i => i.id))
+  }
+}
+```
+
+### 6.5 冲突解决
+
+- 以 `updatedAt` 时间戳最新为准
+- 保留旧版本作为备份
+- 自动重试 3 次，间隔递增
+
+### 6.6 同步模块结构
+
+```
+src/main/sync/
+├── types.ts         # 类型定义
+├── discovery.ts     # 设备发现
+├── protocol.ts      # 协议处理
+├── server.ts        # HTTP服务器
+├── syncManager.ts   # 同步管理器
+└── index.ts         # 导出
+```
 
 ---
 
-## 6. 命名规范
+## 7. 命名规范
 
-### 6.1 文件命名
+### 7.1 文件命名
 
 - React 组件：`PascalCase.tsx`（如 `ChatWindow.tsx`）
-- TypeScript 类型：`camelCase.ts`（如 `index.ts`）
+- TypeScript 类型：`camelCase.ts`（如 `types.ts`）
 - 配置文件：`kebab-case.json`（如 `electron-builder.json`）
 - 脚本文件：`kebab-case.js`（如 `start.js`）
 
-### 6.2 变量命名
+### 7.2 变量命名
 
 - 普通变量：`camelCase`（如 `inputValue`）
-- 常量：`UPPER_SNAKE_CASE`（如 `DEFAULT_TIMEOUT`）
+- 常量：`UPPER_SNAKE_CASE`（如 `DEFAULT_PORT`）
 - 类型/接口：`PascalCase`（如 `Inspiration`）
 - 枚举值：`camelCase`（如 `InspirationStatus`）
 
-### 6.3 事件处理函数
+### 7.3 事件处理函数
 
 - 点击事件：`handle` 前缀（如 `handleSend`）
 - 变化事件：`handle` + 目标名称 + `Change`（如 `handleInputChange`）
 - 键盘事件：`handle` + 目标名称 + `KeyDown`（如 `handleKeyDown`）
 
-### 6.4 Hooks
+### 7.4 Hooks
 
 - 自定义 Hook：`use` 前缀（如 `useChat`）
 - Hook 返回类型：`Use` + Hook 名称 + `Return`（如 `UseChatReturn`）
@@ -641,7 +733,7 @@ export const useAppStore = create<ChatState & ConfigState & InspirationState>()(
 
 | 版本 | 日期 | 描述 |
 |------|------|------|
-| 1.0.0 | 2026-06-08 | 初始规范 |
+| 1.0.0 | 2026-06-08 | 初始规范，包含完整同步系统 |
 
 ### B. 参考文献
 
@@ -650,7 +742,8 @@ export const useAppStore = create<ChatState & ConfigState & InspirationState>()(
 - Zustand 官方文档
 - Electron 官方文档
 - OpenAI API 文档
+- 局域网同步系统设计文档
 
 ---
 
-> 本规范将随项目发展持续更新
+> 本规范与灵感调酒师、AI写作教练项目保持一致，避免数据冲突

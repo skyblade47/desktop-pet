@@ -86,10 +86,10 @@ export const useChat = (): UseChatReturn => {
   )
 
   /**
-   * 保存为灵感
+   * 保存为灵感并同步到灵感调酒师
    */
   const saveAsInspiration = useCallback(
-    (content: string, tags: string[] = []): Inspiration => {
+    async (content: string, tags: string[] = []): Promise<Inspiration> => {
       const inspiration: Inspiration = {
         id: uuidv4(),
         content,
@@ -98,7 +98,28 @@ export const useChat = (): UseChatReturn => {
         updatedAt: new Date(),
         status: 'draft',
       }
+      
+      // 添加到本地存储
       addInspiration(inspiration)
+
+      // 尝试同步到灵感调酒师
+      try {
+        // @ts-expect-error - electronAPI is exposed via preload
+        const result = await window.electronAPI.syncAddInspiration({
+          id: inspiration.id,
+          content: inspiration.content,
+          tags: inspiration.tags,
+        })
+        
+        if (result.success) {
+          console.log('[useChat] Inspiration synced successfully')
+        } else {
+          console.log('[useChat] Sync failed, will retry later:', result.error)
+        }
+      } catch (error) {
+        console.log('[useChat] Sync error, will retry:', error)
+      }
+
       return inspiration
     },
     [addInspiration]

@@ -25,4 +25,53 @@ contextBridge.exposeInMainWorld('electronAPI', {
   invoke: (channel: string, data?: unknown) => {
     return ipcRenderer.invoke(channel, data)
   },
+
+  // ========== 同步相关 API ==========
+
+  /**
+   * 添加灵感到同步队列
+   */
+  syncAddInspiration: (inspiration: {
+    id: string
+    content: string
+    tags?: string[]
+    chatHistory?: Array<{ role: string; content: string; timestamp: string }>
+  }) => {
+    return ipcRenderer.invoke('sync-add-inspiration', inspiration)
+  },
+
+  /**
+   * 手动触发同步
+   */
+  syncTrigger: () => {
+    return ipcRenderer.invoke('sync-trigger')
+  },
+
+  /**
+   * 获取已发现的设备
+   */
+  syncGetDevices: () => {
+    return ipcRenderer.invoke('sync-get-devices')
+  },
+
+  /**
+   * 获取同步队列
+   */
+  syncGetQueue: () => {
+    return ipcRenderer.invoke('sync-get-queue')
+  },
+
+  /**
+   * 获取已发送的灵感
+   */
+  syncGetSent: () => {
+    return ipcRenderer.invoke('sync-get-sent')
+  },
+
+  /**
+   * 设置同步间隔
+   */
+  syncSetInterval: (minutes: number) => {
+    return ipcRenderer.invoke('sync-set-interval', minutes)
+  },
 })

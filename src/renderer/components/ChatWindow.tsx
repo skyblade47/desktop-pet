@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Send, Save, Sparkles } from 'lucide-react'
+import { X, Send, Save, Sparkles, Check } from 'lucide-react'
 import MessageBubble from './MessageBubble'
 import { useChat } from '../hooks/useChat'
 import type { ChatWindowProps } from '../types'
@@ -12,6 +12,9 @@ import type { ChatWindowProps } from '../types'
 const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   // 输入值
   const [inputValue, setInputValue] = useState('')
+  
+  // 保存状态
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   
   // 消息列表滚动引用
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -47,10 +50,23 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   }
 
   // 保存最后一条消息为灵感
-  const handleSaveLastMessage = () => {
+  const handleSaveLastMessage = async () => {
     const lastMessage = messages[messages.length - 1]
-    if (lastMessage) {
-      saveAsInspiration(lastMessage.content)
+    if (!lastMessage || saveStatus === 'saving') return
+
+    setSaveStatus('saving')
+    
+    try {
+      await saveAsInspiration(lastMessage.content)
+      setSaveStatus('saved')
+      
+      // 3秒后重置状态
+      setTimeout(() => {
+        setSaveStatus('idle')
+      }, 3000)
+    } catch (error) {
+      console.error('[ChatWindow] Failed to save inspiration:', error)
+      setSaveStatus('idle')
     }
   }
 
@@ -110,10 +126,31 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
             {messages.length > 0 && (
               <button
                 onClick={handleSaveLastMessage}
-                className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm transition-colors"
+                disabled={saveStatus === 'saving'}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  saveStatus === 'saved'
+                    ? 'bg-green-600 text-white'
+                    : saveStatus === 'saving'
+                    ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                    : 'bg-purple-600 hover:bg-purple-700 text-white'
+                }`}
               >
-                <Save className="w-4 h-4" />
-                保存灵感
+                {saveStatus === 'saved' ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    已保存
+                  </>
+                ) : saveStatus === 'saving' ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    保存中...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    保存灵感
+                  </>
+                )}
               </button>
             )}
           </div>
