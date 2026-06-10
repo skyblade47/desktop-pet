@@ -1,5 +1,6 @@
 import { ipcMain } from 'electron'
 import { SyncManager } from './sync/syncManager'
+import { memoryPromotionService } from './harness/memory-promotion-service'
 
 export const setupIPC = () => {
   // 测试 ping
@@ -93,6 +94,98 @@ export const setupIPC = () => {
       return { success: true }
     } catch (error) {
       console.error('[IPC] sync-set-interval failed:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  // ========== 记忆提升相关 API ==========
+
+  // 创建记忆提升候选
+  ipcMain.handle(
+    'memoryPromotion:create',
+    (
+      _,
+      data: {
+        projectId: string
+        type: 'fact' | 'character_trait' | 'plot_point' | 'setting' | 'relationship'
+        content: string
+        sourceBlockId?: string
+        sourceAgent?: string
+        confidence?: number
+      }
+    ) => {
+      try {
+        const candidate = memoryPromotionService.createCandidate(data)
+        return { success: true, candidate }
+      } catch (error) {
+        console.error('[IPC] memoryPromotion:create failed:', error)
+        return { success: false, error: (error as Error).message }
+      }
+    }
+  )
+
+  // 获取待处理的记忆提升候选
+  ipcMain.handle('memoryPromotion:getPending', (_, projectId: string) => {
+    try {
+      const candidates = memoryPromotionService.getPendingCandidates(projectId)
+      return { success: true, candidates }
+    } catch (error) {
+      console.error('[IPC] memoryPromotion:getPending failed:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  // 获取所有记忆提升候选
+  ipcMain.handle('memoryPromotion:getAll', (_, projectId: string) => {
+    try {
+      const candidates = memoryPromotionService.getAllCandidates(projectId)
+      return { success: true, candidates }
+    } catch (error) {
+      console.error('[IPC] memoryPromotion:getAll failed:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  // 批准记忆提升候选
+  ipcMain.handle('memoryPromotion:approve', async (_, candidateId: string) => {
+    try {
+      const result = await memoryPromotionService.approveCandidate(candidateId)
+      return result
+    } catch (error) {
+      console.error('[IPC] memoryPromotion:approve failed:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  // 拒绝记忆提升候选
+  ipcMain.handle('memoryPromotion:reject', (_, candidateId: string) => {
+    try {
+      memoryPromotionService.rejectCandidate(candidateId)
+      return { success: true }
+    } catch (error) {
+      console.error('[IPC] memoryPromotion:reject failed:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  // 删除记忆提升候选
+  ipcMain.handle('memoryPromotion:delete', (_, candidateId: string) => {
+    try {
+      memoryPromotionService.deleteCandidate(candidateId)
+      return { success: true }
+    } catch (error) {
+      console.error('[IPC] memoryPromotion:delete failed:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  // 批量批准记忆提升候选
+  ipcMain.handle('memoryPromotion:approveBatch', async (_, candidateIds: string[]) => {
+    try {
+      const result = await memoryPromotionService.approveCandidates(candidateIds)
+      return { success: true, approvedCount: result.success, failedCount: result.failed }
+    } catch (error) {
+      console.error('[IPC] memoryPromotion:approveBatch failed:', error)
       return { success: false, error: (error as Error).message }
     }
   })

@@ -74,4 +74,62 @@ contextBridge.exposeInMainWorld('electronAPI', {
   syncSetInterval: (minutes: number) => {
     return ipcRenderer.invoke('sync-set-interval', minutes)
   },
+
+  // ========== 记忆提升相关 API ==========
+
+  /**
+   * 创建记忆提升候选
+   */
+  memoryPromotionCreate: (data: {
+    projectId: string
+    type: 'fact' | 'character_trait' | 'plot_point' | 'setting' | 'relationship'
+    content: string
+    sourceBlockId?: string
+    sourceAgent?: string
+    confidence?: number
+  }) => {
+    return ipcRenderer.invoke('memoryPromotion:create', data)
+  },
+
+  /**
+   * 获取待处理的记忆提升候选
+   */
+  memoryPromotionGetPending: (projectId: string) => {
+    return ipcRenderer.invoke('memoryPromotion:getPending', projectId)
+  },
+
+  /**
+   * 获取所有记忆提升候选
+   */
+  memoryPromotionGetAll: (projectId: string) => {
+    return ipcRenderer.invoke('memoryPromotion:getAll', projectId)
+  },
+
+  /**
+   * 批准记忆提升候选
+   */
+  memoryPromotionApprove: (candidateId: string) => {
+    return ipcRenderer.invoke('memoryPromotion:approve', candidateId)
+  },
+
+  /**
+   * 拒绝记忆提升候选
+   */
+  memoryPromotionReject: (candidateId: string) => {
+    return ipcRenderer.invoke('memoryPromotion:reject', candidateId)
+  },
+
+  /**
+   * 删除记忆提升候选
+   */
+  memoryPromotionDelete: (candidateId: string) => {
+    return ipcRenderer.invoke('memoryPromotion:delete', candidateId)
+  },
+
+  /**
+   * 批量批准记忆提升候选
+   */
+  memoryPromotionApproveBatch: (candidateIds: string[]) => {
+    return ipcRenderer.invoke('memoryPromotion:approveBatch', candidateIds)
+  },
 })

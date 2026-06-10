@@ -3,6 +3,7 @@ import path from 'path'
 import { setupIPC } from './ipc'
 import { createTray, destroyTray } from './tray'
 import { SyncManager } from './sync/syncManager'
+import { initDatabase } from './database'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -35,10 +36,10 @@ const createWindow = () => {
 
   // 设置窗口位置
   mainWindow.setPosition(100, 100)
-  
+
   // 创建系统托盘
   createTray(mainWindow)
-  
+
   // 设置 IPC 通信
   setupIPC()
 }
@@ -49,19 +50,22 @@ const createWindow = () => {
 const initSyncService = async () => {
   try {
     const syncManager = SyncManager.getInstance()
-    await syncManager.init({
-      enabled: true,
-      autoSync: true,
-      syncInterval: 5,
-      deviceName: '桌面宠物',
-    }, {
-      onInspirationSynced: (inspiration) => {
-        console.log('[Main] Inspiration synced:', inspiration.id)
+    await syncManager.init(
+      {
+        enabled: true,
+        autoSync: true,
+        syncInterval: 5,
+        deviceName: '桌面宠物',
       },
-      onDevicesChanged: (devices) => {
-        console.log('[Main] Devices changed:', devices.length)
-      },
-    })
+      {
+        onInspirationSynced: (inspiration) => {
+          console.log('[Main] Inspiration synced:', inspiration.id)
+        },
+        onDevicesChanged: (devices) => {
+          console.log('[Main] Devices changed:', devices.length)
+        },
+      }
+    )
   } catch (error) {
     console.error('[Main] Failed to initialize sync service:', error)
   }
@@ -69,6 +73,9 @@ const initSyncService = async () => {
 
 // 应用准备就绪
 app.whenReady().then(async () => {
+  // 初始化数据库
+  await initDatabase()
+
   createWindow()
   await initSyncService()
 })
