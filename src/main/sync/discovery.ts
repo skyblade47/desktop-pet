@@ -13,6 +13,7 @@ export class DeviceDiscovery {
   private advertiser: any = null
   private serviceName: string = ''
   private port: number = 0
+  private bonjourInstance: any = null
 
   /**
    * 启动发现服务
@@ -23,8 +24,12 @@ export class DeviceDiscovery {
 
     try {
       // 动态导入 bonjour 库
-      const bonjour = await import('bonjour')
-      const service = bonjour()
+      const bonjourModule = await import('bonjour')
+      // bonjour 可能需要调用才能获取实例
+      this.bonjourInstance = typeof bonjourModule.default === 'function' 
+        ? bonjourModule.default() 
+        : bonjourModule
+      const service = this.bonjourInstance
 
       // 发布自身服务
       this.advertiser = service.publish({

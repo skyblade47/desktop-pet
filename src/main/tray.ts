@@ -8,15 +8,24 @@ let tray: Tray | null = null
  * @param mainWindow 主窗口实例
  */
 export const createTray = (mainWindow: BrowserWindow) => {
-  // 图标路径（开发环境和生产环境）
-  const iconPath = app.isPackaged
-    ? path.join(process.resourcesPath, 'build', 'icon.png')
-    : path.join(__dirname, '../../build/icon.png')
+  // 确定图标路径
+  let iconPath: string
+  
+  if (app.isPackaged) {
+    // 生产环境
+    iconPath = path.join(process.resourcesPath, 'build', 'icon.png')
+  } else {
+    // 开发环境 - 使用正确的路径
+    iconPath = path.join(__dirname, '..', '..', 'build', 'icon.png')
+  }
+  
+  console.log('[Tray] Icon path:', iconPath)
   
   try {
     tray = new Tray(iconPath)
   } catch (error) {
     console.error('Failed to create tray:', error)
+    // 如果图标加载失败，继续运行（托盘不是必需的）
     return
   }
   

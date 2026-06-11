@@ -31,28 +31,40 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
+  overflow: visible;
   background: transparent;
+  width: 100%;
+  height: 100%;
 }
 
 #root {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  background: transparent;
+}
+
+/* 确保透明窗口正确渲染 */
+.app {
+  width: 100%;
+  height: 100%;
+  background: transparent;
 }
 
 /* ============================================================
  * 桌宠组件样式
  * ============================================================ */
 
-/* 桌宠容器 */
+/* 桌宠容器 - 在透明窗口中居中显示 */
 .pet-container {
-  position: fixed;
-  right: 30px;
-  bottom: 30px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 200;
 }
 

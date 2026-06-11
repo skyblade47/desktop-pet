@@ -40,6 +40,19 @@ const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }
     setTimeout(() => setShowStatus(false), 2000)
   }
 
+  // 呼吸动画变体
+  const breatheVariants = {
+    animate: {
+      scaleY: [1, 1.06, 0.96, 1],
+      scaleX: [1, 0.96, 1.04, 1],
+      transition: {
+        duration: 3.2,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      },
+    },
+  }
+
   return (
     <>
       {/* 桌宠 */}
@@ -49,6 +62,8 @@ const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }
           onClick={handleClick}
           onContextMenu={handleContextMenu}
           whileTap={{ scale: [1, 1.15, 0.92, 1.05, 1] }}
+          variants={breatheVariants}
+          animate="animate"
         >
           {/* 状态文字 */}
           <AnimatePresence>
@@ -64,7 +79,7 @@ const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }
             )}
           </AnimatePresence>
 
-          {/* 墨滴 SVG */}
+          {/* 墨滴 SVG - 使用纯正的墨黑色 */}
           <svg
             viewBox="0 0 60 55"
             xmlns="http://www.w3.org/2000/svg"
@@ -72,36 +87,36 @@ const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }
             <defs>
               <radialGradient
                 id="bodyGrad"
-                cx="40%"
-                cy="45%"
-                r="65%"
+                cx="35%"
+                cy="40%"
+                r="70%"
               >
                 <stop
                   offset="0%"
-                  stopColor="#8B7355"
+                  stopColor="#2A2A2A"
                 />
                 <stop
-                  offset="50%"
-                  stopColor="#6B5335"
+                  offset="40%"
+                  stopColor="#0D0D0D"
                 />
                 <stop
                   offset="100%"
-                  stopColor="#4A3820"
+                  stopColor="#000000"
                 />
               </radialGradient>
               <radialGradient
                 id="highlightGrad"
-                cx="40%"
-                cy="35%"
-                r="45%"
+                cx="35%"
+                cy="30%"
+                r="40%"
               >
                 <stop
                   offset="0%"
-                  stopColor="rgba(255,255,255,0.55)"
+                  stopColor="rgba(255,255,255,0.35)"
                 />
                 <stop
-                  offset="60%"
-                  stopColor="rgba(255,255,255,0.18)"
+                  offset="50%"
+                  stopColor="rgba(255,255,255,0.08)"
                 />
                 <stop
                   offset="100%"
@@ -112,6 +127,8 @@ const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }
             <path
               d="M 30,4 Q 40,8 50,20 Q 56,30 54,40 Q 52,50 45,52 Q 38,55 30,54 Q 22,55 15,52 Q 8,50 6,40 Q 4,30 10,20 Q 20,8 30,4 Z"
               fill="url(#bodyGrad)"
+              stroke="rgba(255,255,255,0.05)"
+              strokeWidth="0.5"
             />
             <ellipse
               cx="20"
@@ -126,42 +143,42 @@ const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }
               cy="33"
               rx="4"
               ry="4.5"
-              fill="#fff"
+              fill="#ffffff"
             />
             <ellipse
               cx="38"
               cy="33"
               rx="4"
               ry="4.5"
-              fill="#fff"
+              fill="#ffffff"
             />
             <circle
               cx="23"
               cy="34"
               r="2.2"
-              fill="#2B1D10"
+              fill="#000000"
             />
             <circle
               cx="39"
               cy="34"
               r="2.2"
-              fill="#2B1D10"
+              fill="#000000"
             />
             <circle
               cx="24"
               cy="32.5"
               r="0.8"
-              fill="#fff"
+              fill="#ffffff"
             />
             <circle
               cx="40"
               cy="32.5"
               r="0.8"
-              fill="#fff"
+              fill="#ffffff"
             />
             <path
               d="M 27,42 Q 30,44 33,42"
-              stroke="#2B1D10"
+              stroke="#000000"
               strokeWidth="1.2"
               fill="none"
               strokeLinecap="round"

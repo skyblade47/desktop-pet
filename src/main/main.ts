@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, screen } from 'electron'
 import path from 'path'
 import { setupIPC } from './ipc'
 import { createTray, destroyTray } from './tray'
@@ -11,14 +11,21 @@ let mainWindow: BrowserWindow | null = null
  * 创建主窗口
  */
 const createWindow = () => {
+  // 获取屏幕尺寸
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize
+
   mainWindow = new BrowserWindow({
-    width: 400,
-    height: 600,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    resizable: false,
-    skipTaskbar: true,
+    width: 120,  // 窗口宽度 - 刚好容纳桌宠
+    height: 100, // 窗口高度 - 刚好容纳桌宠
+    x: screenWidth - 150, // 屏幕右下角
+    y: screenHeight - 130,
+    frame: false,           // 无边框
+    transparent: true,       // 透明背景
+    alwaysOnTop: true,      // 始终在最前
+    resizable: false,        // 不可调整大小
+    skipTaskbar: true,       // 不显示在任务栏
+    hasShadow: false,        // 无阴影
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),
       nodeIntegration: false,
@@ -28,14 +35,21 @@ const createWindow = () => {
 
   // 加载页面
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173')
-    mainWindow.webContents.openDevTools()
+    mainWindow.loadURL('http://localhost:5174')
+    // 开发时打开 DevTools 用于调试
+    // mainWindow.webContents.openDevTools({ mode: 'detach' })
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 
-  // 设置窗口位置
-  mainWindow.setPosition(100, 100)
+  // 调试：窗口准备就绪时打印日志
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('[Main] Window loaded successfully')
+  })
+
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    console.error('[Main] Window failed to load:', errorCode, errorDescription)
+  })
 
   // 创建系统托盘
   createTray(mainWindow)
@@ -73,11 +87,17 @@ const initSyncService = async () => {
 
 // 应用准备就绪
 app.whenReady().then(async () => {
-  // 初始化数据库
-  await initDatabase()
+  // 初始化数据库（不阻塞应用启动）
+  initDatabase().catch((error) => {
+    console.error('[Main] Database initialization failed:', error)
+  })
 
   createWindow()
-  await initSyncService()
+  
+  // 初始化同步服务（不阻塞应用启动）
+  initSyncService().catch((error) => {
+    console.error('[Main] Sync service initialization failed:', error)
+  })
 })
 
 // 所有窗口关闭时（macOS 除外）
