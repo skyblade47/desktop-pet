@@ -6,7 +6,7 @@ let electronProcess = null
 
 const startVite = () => {
   return new Promise((resolve) => {
-    const viteProcess = spawn('npx', ['electron-vite', '--dev'], {
+    const viteProcess = spawn('npx', ['electron-vite', 'dev'], {
       cwd: process.cwd(),
       stdio: 'inherit',
       shell: true,
@@ -19,7 +19,7 @@ const startVite = () => {
       process.exit(code)
     })
     
-    setTimeout(resolve, 2000)
+    setTimeout(resolve, 3000)
   })
 }
 

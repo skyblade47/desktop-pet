@@ -1,0 +1,11 @@
+{
+  "images": [
+    {
+      "src": "build/icon.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ],
+  "name": "desktop-pet",
+  "description": "桌面宠物 - 灵感助手"
+}
