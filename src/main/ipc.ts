@@ -14,15 +14,15 @@ export const setupIPC = () => {
   })
   
   // 获取应用版本
-  ipcMain.handle('get-version', () => {
+  ipcMain.handle('app:getVersion', () => {
     const { app } = require('electron')
-    return app.getVersion()
+    return { success: true, data: { version: app.getVersion() } }
   })
 
-  // ========== 同步相关 API ==========
+  // ========== 同步相关 API (遵循 domain:action 命名约定) ==========
 
   // 添加灵感到同步队列
-  ipcMain.handle('sync-add-inspiration', async (_, inspiration: {
+  ipcMain.handle('sync:addInspiration', async (_, inspiration: {
     id: string
     content: string
     tags?: string[]
@@ -33,72 +33,101 @@ export const setupIPC = () => {
       const result = await syncManager.addInspirationToSync(inspiration)
       return { success: true, data: result }
     } catch (error) {
-      console.error('[IPC] sync-add-inspiration failed:', error)
+      console.error('[IPC] sync:addInspiration failed:', error)
       return { success: false, error: (error as Error).message }
     }
   })
 
   // 手动触发同步
-  ipcMain.handle('sync-trigger', async () => {
+  ipcMain.handle('sync:trigger', async () => {
     try {
       const syncManager = SyncManager.getInstance()
       await syncManager.triggerSync()
       return { success: true }
     } catch (error) {
-      console.error('[IPC] sync-trigger failed:', error)
+      console.error('[IPC] sync:trigger failed:', error)
       return { success: false, error: (error as Error).message }
     }
   })
 
   // 获取已发现的设备
-  ipcMain.handle('sync-get-devices', () => {
+  ipcMain.handle('sync:getDevices', () => {
     try {
       const syncManager = SyncManager.getInstance()
       const devices = syncManager.getDiscoveredDevices()
-      return { success: true, devices }
+      return { success: true, data: devices }
     } catch (error) {
-      console.error('[IPC] sync-get-devices failed:', error)
+      console.error('[IPC] sync:getDevices failed:', error)
       return { success: false, error: (error as Error).message }
     }
   })
 
   // 获取同步队列
-  ipcMain.handle('sync-get-queue', () => {
+  ipcMain.handle('sync:getQueue', () => {
     try {
       const syncManager = SyncManager.getInstance()
       const queue = syncManager.getSyncQueue()
-      return { success: true, queue }
+      return { success: true, data: queue }
     } catch (error) {
-      console.error('[IPC] sync-get-queue failed:', error)
+      console.error('[IPC] sync:getQueue failed:', error)
       return { success: false, error: (error as Error).message }
     }
   })
 
   // 获取已发送的灵感
-  ipcMain.handle('sync-get-sent', () => {
+  ipcMain.handle('sync:getSent', () => {
     try {
       const syncManager = SyncManager.getInstance()
       const sent = syncManager.getSentInspirations()
-      return { success: true, sent }
+      return { success: true, data: sent }
     } catch (error) {
-      console.error('[IPC] sync-get-sent failed:', error)
+      console.error('[IPC] sync:getSent failed:', error)
       return { success: false, error: (error as Error).message }
     }
   })
 
   // 设置同步间隔
-  ipcMain.handle('sync-set-interval', (_, minutes: number) => {
+  ipcMain.handle('sync:setInterval', (_, minutes: number) => {
     try {
       const syncManager = SyncManager.getInstance()
       syncManager.setSyncInterval(minutes)
       return { success: true }
     } catch (error) {
-      console.error('[IPC] sync-set-interval failed:', error)
+      console.error('[IPC] sync:setInterval failed:', error)
       return { success: false, error: (error as Error).message }
     }
   })
 
-  // ========== 记忆提升相关 API ==========
+  // 获取同步配置
+  ipcMain.handle('sync:getConfig', () => {
+    try {
+      const syncManager = SyncManager.getInstance()
+      const config = syncManager.getConfig()
+      return { success: true, data: config }
+    } catch (error) {
+      console.error('[IPC] sync:getConfig failed:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  // 更新同步配置
+  ipcMain.handle('sync:updateConfig', (_, config: Partial<{
+    enabled: boolean
+    autoSync: boolean
+    syncInterval: number
+    deviceName: string
+  }>) => {
+    try {
+      const syncManager = SyncManager.getInstance()
+      syncManager.updateConfig(config)
+      return { success: true }
+    } catch (error) {
+      console.error('[IPC] sync:updateConfig failed:', error)
+      return { success: false, error: (error as Error).message }
+    }
+  })
+
+  // ========== 记忆提升相关 API (遵循 domain:action 命名约定) ==========
 
   // 创建记忆提升候选
   ipcMain.handle(
@@ -116,7 +145,7 @@ export const setupIPC = () => {
     ) => {
       try {
         const candidate = memoryPromotionService.createCandidate(data)
-        return { success: true, candidate }
+        return { success: true, data: candidate }
       } catch (error) {
         console.error('[IPC] memoryPromotion:create failed:', error)
         return { success: false, error: (error as Error).message }
@@ -128,7 +157,7 @@ export const setupIPC = () => {
   ipcMain.handle('memoryPromotion:getPending', (_, projectId: string) => {
     try {
       const candidates = memoryPromotionService.getPendingCandidates(projectId)
-      return { success: true, candidates }
+      return { success: true, data: candidates }
     } catch (error) {
       console.error('[IPC] memoryPromotion:getPending failed:', error)
       return { success: false, error: (error as Error).message }
@@ -139,7 +168,7 @@ export const setupIPC = () => {
   ipcMain.handle('memoryPromotion:getAll', (_, projectId: string) => {
     try {
       const candidates = memoryPromotionService.getAllCandidates(projectId)
-      return { success: true, candidates }
+      return { success: true, data: candidates }
     } catch (error) {
       console.error('[IPC] memoryPromotion:getAll failed:', error)
       return { success: false, error: (error as Error).message }
@@ -183,7 +212,7 @@ export const setupIPC = () => {
   ipcMain.handle('memoryPromotion:approveBatch', async (_, candidateIds: string[]) => {
     try {
       const result = await memoryPromotionService.approveCandidates(candidateIds)
-      return { success: true, approvedCount: result.success, failedCount: result.failed }
+      return { success: true, data: { approvedCount: result.success, failedCount: result.failed } }
     } catch (error) {
       console.error('[IPC] memoryPromotion:approveBatch failed:', error)
       return { success: false, error: (error as Error).message }

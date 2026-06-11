@@ -6,7 +6,8 @@ import type {
   ConfigState, 
   Inspiration, 
   InspirationState, 
-  Message 
+  Message,
+  AppState
 } from '../types'
 
 /**
@@ -27,7 +28,7 @@ const defaultConfig: AppConfig = {
  * 应用状态管理
  * 组合了聊天状态、配置状态和灵感状态
  */
-export const useAppStore = create<ChatState & ConfigState & InspirationState>()(
+export const useAppStore = create<ChatState & ConfigState & InspirationState & AppState>()(
   persist(
     (set, get) => ({
       // ============================================
@@ -80,6 +81,15 @@ export const useAppStore = create<ChatState & ConfigState & InspirationState>()(
             i.id === id ? { ...i, status: 'synced' } : i
           ),
         })),
+
+      // ============================================
+      // App State
+      // ============================================
+      
+      initialize: () => {
+        // 应用初始化，可以在这里添加初始化逻辑
+        console.log('[App] Initialized')
+      },
     }),
     {
       name: 'desktop-pet-storage',

@@ -4,19 +4,105 @@
 
 ## 目录
 
-1. [TypeScript 类型定义](#1-typescript-类型定义)
-2. [API 接口规范](#2-api-接口规范)
-3. [组件接口规范](#3-组件接口规范)
-4. [配置规范](#4-配置规范)
-5. [状态管理规范](#5-状态管理规范)
-6. [局域网同步规范](#6-局域网同步规范)
-7. [命名规范](#7-命名规范)
+1. [设计系统](#1-设计系统)
+2. [TypeScript 类型定义](#2-typescript-类型定义)
+3. [API 接口规范](#3-api-接口规范)
+4. [组件接口规范](#4-组件接口规范)
+5. [配置规范](#5-配置规范)
+6. [状态管理规范](#6-状态管理规范)
+7. [局域网同步规范](#7-局域网同步规范)
+8. [命名规范](#8-命名规范)
 
 ---
 
-## 1. TypeScript 类型定义
+## 1. 设计系统
 
-### 1.1 核心数据类型
+> 与AI写作教练保持一致的木板风格设计系统
+
+### 1.1 木板色系 (Wood Panel Style)
+
+```css
+:root {
+  /* ---- 木板色系 ---- */
+  --board-light: #D4C4B0;    /* 浅木色 - 用于卡片背景、输入区域 */
+  --board-medium: #8B7355;   /* 中木色 - 用于边框、次要元素 */
+  --board-dark: #4A3820;     /* 深木色 - 用于主要文字、头部背景 */
+  --paper-white: #FFFDF7;   /* 纸张白 - 用于内容背景 */
+  --paper-shadow: rgba(0, 0, 0, 0.1); /* 纸张阴影 */
+
+  /* ---- 木板语义色 ---- */
+  --accent-blue: #4A7C9B;          /* 蓝色强调 - 用于链接、交互 */
+  --accent-green: #6B9E7D;         /* 绿色 - 用于成功，完成状态 */
+  --accent-orange: #D48B5A;       /* 橙色 - 用于警告、通知 */
+  --accent-red: #C75B5B;          /* 红色 - 用于错误、删除 */
+}
+```
+
+### 1.2 墨滴桌宠形象
+
+```tsx
+// 墨滴桌宠 SVG 组件
+const InkDropPet = () => (
+  <svg viewBox="0 0 60 55" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="bodyGrad" cx="40%" cy="45%" r="65%">
+        <stop offset="0%" stopColor="#8B7355" />
+        <stop offset="50%" stopColor="#6B5335" />
+        <stop offset="100%" stopColor="#4A3820" />
+      </radialGradient>
+      <radialGradient id="highlightGrad" cx="40%" cy="35%" r="45%">
+        <stop offset="0%" stopColor="rgba(255,255,255,0.55)" />
+        <stop offset="60%" stopColor="rgba(255,255,255,0.18)" />
+        <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+      </radialGradient>
+    </defs>
+    {/* 身体轮廓 */}
+    <path
+      d="M 30,4 Q 40,8 50,20 Q 56,30 54,40 Q 52,50 45,52 Q 38,55 30,54 Q 22,55 15,52 Q 8,50 6,40 Q 4,30 10,20 Q 20,8 30,4 Z"
+      fill="url(#bodyGrad)"
+    />
+    {/* 高光 */}
+    <ellipse cx="20" cy="20" rx="8" ry="6" fill="url(#highlightGrad)" />
+    {/* 眼睛 */}
+    <ellipse cx="22" cy="33" rx="4" ry="4.5" fill="#fff" />
+    <ellipse cx="38" cy="33" rx="4" ry="4.5" fill="#fff" />
+    <circle cx="23" cy="34" r="2.2" fill="#2B1D10" />
+    <circle cx="39" cy="34" r="2.2" fill="#2B1D10" />
+    {/* 嘴巴 */}
+    <path d="M 27,42 Q 30,44 33,42" stroke="#2B1D10" strokeWidth="1.2" fill="none" />
+  </svg>
+)
+```
+
+### 1.3 桌宠动画
+
+```css
+/* 呼吸动画 */
+@keyframes pet-breathe {
+  0%, 100% { transform: scale(1, 1); }
+  35% { transform: scale(0.96, 1.06); }
+  65% { transform: scale(1.04, 0.96); }
+}
+
+.pet-avatar {
+  animation: pet-breathe 3.2s ease-in-out infinite;
+}
+```
+
+### 1.4 组件层级
+
+| 层级 | Z-Index | 说明 |
+|------|---------|------|
+| 桌宠容器 | 200 | 浮动在所有窗口之上 |
+| 聊天窗口 | 200 | 对话气泡式设计 |
+| 设置面板 | 300 | 模态框形式 |
+| 遮罩层 | 250 | 设置面板背景 |
+
+---
+
+## 2. TypeScript 类型定义
+
+### 2.1 核心数据类型
 
 #### Inspiration（灵感）
 
@@ -325,9 +411,9 @@ export interface UseLocalModelReturn {
 
 ---
 
-## 2. API 接口规范
+## 3. API 接口规范
 
-### 2.1 本地模型 API（OpenAI 兼容）
+### 3.1 本地模型 API（OpenAI 兼容）
 
 #### 聊天完成接口
 
@@ -438,22 +524,33 @@ Content-Type: application/json
 
 ### 2.3 IPC 接口（主进程与渲染进程）
 
+> **命名约定**：遵循 AI写作教练规范，采用 `domain:action` 格式
+
 | 接口名 | 用途 | 参数 | 返回值 |
 |--------|------|------|--------|
 | `ping` | 测试通信 | 无 | `'pong'` |
-| `get-version` | 获取版本 | 无 | 版本号 |
-| `sync-add-inspiration` | 添加灵感到同步队列 | `Inspiration` | `{ success: boolean, data?: SyncInspiration }` |
-| `sync-trigger` | 手动触发同步 | 无 | `{ success: boolean }` |
-| `sync-get-devices` | 获取已发现设备 | 无 | `{ success: boolean, devices: SyncDevice[] }` |
-| `sync-get-queue` | 获取同步队列 | 无 | `{ success: boolean, queue: SyncInspiration[] }` |
-| `sync-get-sent` | 获取已发送灵感 | 无 | `{ success: boolean, sent: SyncInspiration[] }` |
-| `sync-set-interval` | 设置同步间隔 | `minutes: number` | `{ success: boolean }` |
+| `app:getVersion` | 获取版本 | 无 | `{ success: boolean, data: { version: string } }` |
+| `sync:addInspiration` | 添加灵感到同步队列 | `Inspiration` | `{ success: boolean, data?: SyncInspiration }` |
+| `sync:trigger` | 手动触发同步 | 无 | `{ success: boolean }` |
+| `sync:getDevices` | 获取已发现设备 | 无 | `{ success: boolean, data: SyncDevice[] }` |
+| `sync:getQueue` | 获取同步队列 | 无 | `{ success: boolean, data: SyncInspiration[] }` |
+| `sync:getSent` | 获取已发送灵感 | 无 | `{ success: boolean, data: SyncInspiration[] }` |
+| `sync:setInterval` | 设置同步间隔 | `minutes: number` | `{ success: boolean }` |
+| `sync:getConfig` | 获取同步配置 | 无 | `{ success: boolean, data: SyncConfig }` |
+| `sync:updateConfig` | 更新同步配置 | `Partial<SyncConfig>` | `{ success: boolean }` |
+| `memoryPromotion:create` | 创建记忆提升候选 | `MemoryPromotionData` | `{ success: boolean, data: MemoryPromotionCandidate }` |
+| `memoryPromotion:getPending` | 获取待处理候选 | `projectId: string` | `{ success: boolean, data: MemoryPromotionCandidate[] }` |
+| `memoryPromotion:getAll` | 获取所有候选 | `projectId: string` | `{ success: boolean, data: MemoryPromotionCandidate[] }` |
+| `memoryPromotion:approve` | 批准候选 | `candidateId: string` | `{ success: boolean, data?: any }` |
+| `memoryPromotion:reject` | 拒绝候选 | `candidateId: string` | `{ success: boolean }` |
+| `memoryPromotion:delete` | 删除候选 | `candidateId: string` | `{ success: boolean }` |
+| `memoryPromotion:approveBatch` | 批量批准候选 | `candidateIds: string[]` | `{ success: boolean, data: { approvedCount, failedCount } }` |
 
 ---
 
-## 3. 组件接口规范
+## 4. 组件接口规范
 
-### 3.1 FloatingWidget 组件
+### 4.1 FloatingWidget 组件
 
 ```typescript
 import React from 'react'
@@ -474,7 +571,7 @@ export default FloatingWidget
 - 悬停时轻微放大
 - 呼吸动画效果
 
-### 3.2 ChatWindow 组件
+### 4.2 ChatWindow 组件
 
 ```typescript
 import React from 'react'
@@ -497,7 +594,7 @@ export default ChatWindow
 - 禁用状态：加载时输入框禁用
 - 空状态提示
 
-### 3.3 MessageBubble 组件
+### 4.3 MessageBubble 组件
 
 ```typescript
 import React from 'react'
@@ -517,7 +614,7 @@ export default MessageBubble
 - 最大宽度 80%
 - 自动换行
 
-### 3.4 SettingsPanel 组件
+### 4.4 SettingsPanel 组件
 
 ```typescript
 import React from 'react'
@@ -539,9 +636,9 @@ export default SettingsPanel
 
 ---
 
-## 4. 配置规范
+## 5. 配置规范
 
-### 4.1 默认配置
+### 5.1 默认配置
 
 ```typescript
 export const defaultConfig: AppConfig = {
@@ -556,7 +653,7 @@ export const defaultConfig: AppConfig = {
 }
 ```
 
-### 4.2 同步配置
+### 5.2 同步配置
 
 ```typescript
 export const defaultSyncConfig: SyncConfig = {
@@ -567,7 +664,7 @@ export const defaultSyncConfig: SyncConfig = {
 }
 ```
 
-### 4.3 端口分配
+### 5.3 端口分配
 
 | 应用 | 端口 | 角色 |
 |------|------|------|
@@ -577,9 +674,9 @@ export const defaultSyncConfig: SyncConfig = {
 
 ---
 
-## 5. 状态管理规范
+## 6. 状态管理规范
 
-### 5.1 Zustand Store 结构
+### 6.1 Zustand Store 结构
 
 ```typescript
 import { create } from 'zustand'
@@ -629,9 +726,9 @@ export const useAppStore = create<ChatState & ConfigState & InspirationState>()(
 
 ---
 
-## 6. 局域网同步规范
+## 7. 局域网同步规范
 
-### 6.1 同步方向
+### 7.1 同步方向
 
 ```
 桌面宠物 (Desktop Pet) [端口: 3001]
@@ -641,7 +738,7 @@ export const useAppStore = create<ChatState & ConfigState & InspirationState>()(
 AI写作教练 (AI Writing Coach) [端口: 3003]
 ```
 
-### 6.2 设计原则
+### 7.2 设计原则
 
 - **单向数据流**: 避免数据冲突，明确流向
 - **局域网优先**: 无需云服务，本地网络即可同步
@@ -649,13 +746,13 @@ AI写作教练 (AI Writing Coach) [端口: 3003]
 - **数据完整性**: 校验和 + 增量同步
 - **离线优先**: 优先本地存储，网络恢复后自动同步
 
-### 6.3 服务发现
+### 7.3 服务发现
 
 - **服务类型**: `_ai-writing-sync._tcp.local.`
 - **TXT 记录**: `version`, `type`, `port`, `name`
 - **发现流程**: 启动时广播自身服务 → 监听网络 → 保存设备列表 → 定期更新
 
-### 6.4 同步流程
+### 7.4 同步流程
 
 ```typescript
 // 1. 发现灵感调酒师设备
@@ -678,13 +775,13 @@ for (const device of devices) {
 }
 ```
 
-### 6.5 冲突解决
+### 7.5 冲突解决
 
 - 以 `updatedAt` 时间戳最新为准
 - 保留旧版本作为备份
 - 自动重试 3 次，间隔递增
 
-### 6.6 同步模块结构
+### 7.6 同步模块结构
 
 ```
 src/main/sync/
@@ -698,29 +795,29 @@ src/main/sync/
 
 ---
 
-## 7. 命名规范
+## 8. 命名规范
 
-### 7.1 文件命名
+### 8.1 文件命名
 
 - React 组件：`PascalCase.tsx`（如 `ChatWindow.tsx`）
 - TypeScript 类型：`camelCase.ts`（如 `types.ts`）
 - 配置文件：`kebab-case.json`（如 `electron-builder.json`）
 - 脚本文件：`kebab-case.js`（如 `start.js`）
 
-### 7.2 变量命名
+### 8.2 变量命名
 
 - 普通变量：`camelCase`（如 `inputValue`）
 - 常量：`UPPER_SNAKE_CASE`（如 `DEFAULT_PORT`）
 - 类型/接口：`PascalCase`（如 `Inspiration`）
 - 枚举值：`camelCase`（如 `InspirationStatus`）
 
-### 7.3 事件处理函数
+### 8.3 事件处理函数
 
 - 点击事件：`handle` 前缀（如 `handleSend`）
 - 变化事件：`handle` + 目标名称 + `Change`（如 `handleInputChange`）
 - 键盘事件：`handle` + 目标名称 + `KeyDown`（如 `handleKeyDown`）
 
-### 7.4 Hooks
+### 8.4 Hooks
 
 - 自定义 Hook：`use` 前缀（如 `useChat`）
 - Hook 返回类型：`Use` + Hook 名称 + `Return`（如 `UseChatReturn`）

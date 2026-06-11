@@ -322,6 +322,35 @@ export class SyncManager {
   }
 
   /**
+   * 获取配置
+   */
+  getConfig(): SyncConfig {
+    return { ...this.config }
+  }
+
+  /**
+   * 更新配置
+   */
+  updateConfig(config: Partial<SyncConfig>): void {
+    this.config = { ...this.config, ...config }
+    
+    // 如果自动同步状态改变，重新启动定时任务
+    if ('autoSync' in config && this.isRunning) {
+      if (config.autoSync) {
+        this.startSyncInterval()
+      } else if (this.syncInterval) {
+        clearInterval(this.syncInterval)
+        this.syncInterval = null
+      }
+    }
+    
+    // 如果同步间隔改变，重新启动定时任务
+    if ('syncInterval' in config && this.config.autoSync && this.isRunning) {
+      this.startSyncInterval()
+    }
+  }
+
+  /**
    * 获取本机 IP
    */
   private getLocalIP(): string | null {

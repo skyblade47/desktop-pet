@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 /**
  * 预加载脚本
  * 在渲染进程和主进程之间建立安全的通信桥梁
+ * 遵循 AI写作教练的 API 命名约定：domain:action
  */
 contextBridge.exposeInMainWorld('electronAPI', {
   /**
@@ -26,7 +27,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke(channel, data)
   },
 
-  // ========== 同步相关 API ==========
+  // ========== 应用相关 API ==========
+
+  /**
+   * 获取应用版本
+   */
+  appGetVersion: () => {
+    return ipcRenderer.invoke('app:getVersion')
+  },
+
+  // ========== 同步相关 API (遵循 domain:action 命名约定) ==========
 
   /**
    * 添加灵感到同步队列
@@ -37,45 +47,64 @@ contextBridge.exposeInMainWorld('electronAPI', {
     tags?: string[]
     chatHistory?: Array<{ role: string; content: string; timestamp: string }>
   }) => {
-    return ipcRenderer.invoke('sync-add-inspiration', inspiration)
+    return ipcRenderer.invoke('sync:addInspiration', inspiration)
   },
 
   /**
    * 手动触发同步
    */
   syncTrigger: () => {
-    return ipcRenderer.invoke('sync-trigger')
+    return ipcRenderer.invoke('sync:trigger')
   },
 
   /**
    * 获取已发现的设备
    */
   syncGetDevices: () => {
-    return ipcRenderer.invoke('sync-get-devices')
+    return ipcRenderer.invoke('sync:getDevices')
   },
 
   /**
    * 获取同步队列
    */
   syncGetQueue: () => {
-    return ipcRenderer.invoke('sync-get-queue')
+    return ipcRenderer.invoke('sync:getQueue')
   },
 
   /**
    * 获取已发送的灵感
    */
   syncGetSent: () => {
-    return ipcRenderer.invoke('sync-get-sent')
+    return ipcRenderer.invoke('sync:getSent')
   },
 
   /**
    * 设置同步间隔
    */
   syncSetInterval: (minutes: number) => {
-    return ipcRenderer.invoke('sync-set-interval', minutes)
+    return ipcRenderer.invoke('sync:setInterval', minutes)
   },
 
-  // ========== 记忆提升相关 API ==========
+  /**
+   * 获取同步配置
+   */
+  syncGetConfig: () => {
+    return ipcRenderer.invoke('sync:getConfig')
+  },
+
+  /**
+   * 更新同步配置
+   */
+  syncUpdateConfig: (config: Partial<{
+    enabled: boolean
+    autoSync: boolean
+    syncInterval: number
+    deviceName: string
+  }>) => {
+    return ipcRenderer.invoke('sync:updateConfig', config)
+  },
+
+  // ========== 记忆提升相关 API (遵循 domain:action 命名约定) ==========
 
   /**
    * 创建记忆提升候选
