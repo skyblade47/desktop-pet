@@ -1,0 +1,7 @@
+export { setupAppHandlers } from './app-controller'
+export { setupConfigHandlers } from './config-controller'
+export { setupProjectHandlers } from './project-controller'
+export { setupFsHandlers } from './fs-controller'
+export { setupLlmHandlers } from './llm-controller'
+export { setupSyncHandlers } from './sync-controller'
+export { setupMemoryPromotionHandlers } from './memory-promotion-controller'
