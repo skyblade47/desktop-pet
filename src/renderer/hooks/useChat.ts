@@ -10,12 +10,11 @@ import type { UseChatReturn, Message, Inspiration } from '../types'
  */
 export const useChat = (): UseChatReturn => {
   // 从 store 获取状态和方法
-  const { messages, isLoading, addMessage, clearMessages, setIsLoading, addInspiration } =
-    useAppStore((state) => state)
-  
+  const { messages, isLoading, addMessage, clearMessages, setIsLoading, addInspiration } = useAppStore((state) => state)
+
   // 使用本地模型
   const { chat } = useLocalModel()
-  
+
   // 流式输出内容
   const [streamingContent, setStreamingContent] = useState('')
 
@@ -31,10 +30,10 @@ export const useChat = (): UseChatReturn => {
         content,
         timestamp: new Date(),
       }
-      
+
       // 添加用户消息
       addMessage(userMessage)
-      
+
       // 设置加载状态
       setIsLoading(true)
       setStreamingContent('')
@@ -98,19 +97,18 @@ export const useChat = (): UseChatReturn => {
         updatedAt: new Date(),
         status: 'draft',
       }
-      
+
       // 添加到本地存储
       addInspiration(inspiration)
 
       // 尝试同步到灵感调酒师
       try {
-        // @ts-expect-error - electronAPI is exposed via preload
         const result = await window.electronAPI.syncAddInspiration({
           id: inspiration.id,
           content: inspiration.content,
           tags: inspiration.tags,
         })
-        
+
         if (result.success) {
           console.log('[useChat] Inspiration synced successfully')
         } else {

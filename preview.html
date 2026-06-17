@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>桌宠 V2 预览 —— 水墨墨球（墨迹浸润版）</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #d4d4d8;
+      padding: 40px 20px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .header h1 { font-size: 28px; color: #e8e8ec; margin-bottom: 8px; }
+    .header p { color: #8a8a99; font-size: 14px; }
+    .showcase { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; }
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .card-title { font-size: 16px; color: #e8e8ec; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .card-title::before { content: ''; width: 4px; height: 16px; background: linear-gradient(180deg, #888, #444); border-radius: 2px; }
+    .static-image-box {
+      width: 100%;
+      aspect-ratio: 1;
+      background: repeating-conic-gradient(#3a3a4a 0 25%, #2a2a3a 0 50%) 0 0 / 16px 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .static-image-box img { width: 85%; height: 85%; object-fit: contain; filter: drop-shadow(0 8px 24px rgba(0,0,0,0.6)); }
+    .canvas-box {
+      width: 100%;
+      aspect-ratio: 1;
+      background: repeating-conic-gradient(#3a3a4a 0 25%, #2a2a3a 0 50%) 0 0 / 16px 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+    }
+    .canvas-box canvas { display: block; }
+    .canvas-placeholder { position: absolute; bottom: 8px; right: 12px; font-size: 11px; color: #6a6a7a; }
+    .control-panel { background: rgba(255,255,255,0.03); border-radius: 12px; padding: 20px; margin-top: 20px; }
+    .control-group { margin-bottom: 20px; }
+    .control-group:last-child { margin-bottom: 0; }
+    .control-label { font-size: 13px; color: #a0a0aa; margin-bottom: 10px; display: block; }
+    .mood-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mood-btn {
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #d4d4d8;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .mood-btn:hover { background: rgba(255,255,255,0.1); }
+    .mood-btn.active { background: rgba(150,150,150,0.2); border-color: #888; color: #fff; }
+    .floating-pet { position: fixed; bottom: 40px; right: 40px; width: 150px; height: 150px; z-index: 1000; cursor: grab; }
+    .floating-pet:active { cursor: grabbing; }
+    .floating-pet canvas { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🐾 桌宠 V2 —— 水墨浸润版</h1>
+      <p>浓墨浸染 · 墨迹边缘柔和晕开 · 参考图风格</p>
+    </div>
+    <div class="showcase">
+      <div class="card">
+        <div class="card-title">参考图</div>
+        <div class="static-image-box">
+          <img src="../docs/design/pet-v2/reference/ink-sphere-v2.png" alt="参考图">
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Canvas 动态版</div>
+        <div class="canvas-box" id="canvas-box">
+          <canvas id="pet-canvas" width="520" height="520"></canvas>
+          <div class="canvas-placeholder">点击互动</div>
+        </div>
+        <div class="control-panel">
+          <div class="control-group">
+            <label class="control-label">情绪状态</label>
+            <div class="mood-buttons" id="mood-buttons">
+              <button class="mood-btn active" data-mood="idle">空闲</button>
+              <button class="mood-btn" data-mood="focused">专注</button>
+              <button class="mood-btn" data-mood="blocked">卡文</button>
+              <button class="mood-btn" data-mood="achievement">成就</button>
+              <button class="mood-btn" data-mood="rest">休息</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="floating-pet" id="floating-pet">
+    <canvas id="floating-canvas" width="300" height="300"></canvas>
+  </div>
+
+  <script>
+    // ========================================================================
+    // 水墨浸润版墨球引擎
+    // 特点：
+    // 1. 墨色浓重，不透底
+    // 2. 墨迹边缘柔和晕开（水墨浸润感）
+    // 3. 眼睛内部有墨色浸染
+    // 4. 外部墨丝有重量感
+    // ========================================================================
+
+    class InkPetEngine {
+      constructor(canvas, opts = {}) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.w = canvas.width;
+        this.h = canvas.height;
+        this.cx = this.w / 2;
+        this.cy = this.h / 2;
+        this.baseR = this.w * 0.34;
+        this.time = 0;
+        this.rotation = 0;
+        this.rotationSpeed = opts.rotationSpeed || 0.006;
+
+        this.currentMood = 'idle';
+        this.targetMood = this.getMoodParams('idle');
+        this.currentMood = JSON.parse(JSON.stringify(this.targetMood));
+
+        this.hoverScale = 1;
+        this.targetHoverScale = 1;
+        this.shakeTime = 0;
+        this.shakeOffset = { x: 0, y: 0 };
+
+        // 主墨团（浓墨核心）
+        this.mainInk = { x: 0, y: 0, vx: 0, vy: 0 };
+
+        // 眼睛墨团
+        this.eyeInk = { x: this.baseR * 0.25, y: this.baseR * 0.08, size: this.baseR * 0.18 };
+
+        // 外部墨丝
+        this.externalTrails = [];
+        for (let i = 0; i < 15; i++) this.addTrail(true);
+
+        this.running = true;
+        this.lastTime = performance.now();
+        this.animate();
+      }
+
+      getMoodParams(mood) {
+        return {
+          idle: { inkDensity: 0.7, trailCount: 12, breathRange: 0.02 },
+          focused: { inkDensity: 0.9, trailCount: 16, breathRange: 0.01 },
+          blocked: { inkDensity: 0.5, trailCount: 20, breathRange: 0.04 },
+          achievement: { inkDensity: 1.0, trailCount: 24, breathRange: 0.05 },
+          rest: { inkDensity: 0.4, trailCount: 8, breathRange: 0.015 },
+        }[mood] || this.getMoodParams('idle');
+      }
+
+      setMood(mood) {
+        this.targetMood = this.getMoodParams(mood);
+      }
+
+      addTrail(fromInit = false) {
+        this.externalTrails.push({
+          birth: fromInit ? -Math.random() * 6000 : this.time,
+          life: 5000 + Math.random() * 3000,
+          angle: Math.random() * Math.PI * 2,
+          length: 25 + Math.random() * 35,
+          width: 3 + Math.random() * 4,
+          speed: 0.5 + Math.random() * 0.5,
+          phase: Math.random() * Math.PI * 2,
+        });
+      }
+
+      triggerClick() {
+        this.shakeTime = 300;
+        for (let i = 0; i < 5; i++) this.addTrail();
+      }
+
+      triggerHover(h) { this.targetHoverScale = h ? 1.05 : 1; }
+
+      lerpParams() {
+        const t = 0.03;
+        for (const k in this.targetMood) {
+          this.currentMood[k] += (this.targetMood[k] - this.currentMood[k]) * t;
+        }
+      }
+
+      animate() {
+        if (!this.running) return;
+        const now = performance.now();
+        const dt = Math.min(now - this.lastTime, 50);
+        this.lastTime = now;
+        this.time += dt;
+
+        this.rotation += this.rotationSpeed * (dt / 16);
+        this.lerpParams();
+        this.hoverScale += (this.targetHoverScale - this.hoverScale) * 0.1;
+
+        if (this.shakeTime > 0) {
+          this.shakeTime -= dt;
+          const s = (this.shakeTime / 300) * 4;
+          this.shakeOffset.x = (Math.random() - 0.5) * s;
+          this.shakeOffset.y = (Math.random() - 0.5) * s;
+        } else {
+          this.shakeOffset.x = 0;
+          this.shakeOffset.y = 0;
+        }
+
+        this.updatePhysics(dt);
+        this.render();
+        requestAnimationFrame(() => this.animate());
+      }
+
+      updatePhysics(dt) {
+        const p = this.currentMood;
+        const speed = 0.001 * p.inkDensity;
+
+        // 主墨团缓慢随机移动
+        this.mainInk.vx += (Math.random() - 0.5) * 0.2;
+        this.mainInk.vy += (Math.random() - 0.5) * 0.2;
+        this.mainInk.vx *= 0.98;
+        this.mainInk.vy *= 0.98;
+        this.mainInk.x += this.mainInk.vx * speed * (dt / 16);
+        this.mainInk.y += this.mainInk.vy * speed * (dt / 16);
+
+        const maxDist = this.baseR * 0.25;
+        const dist = Math.sqrt(this.mainInk.x ** 2 + this.mainInk.y ** 2);
+        if (dist > maxDist) {
+          this.mainInk.x *= maxDist / dist;
+          this.mainInk.y *= maxDist / dist;
+          this.mainInk.vx *= -0.5;
+          this.mainInk.vy *= -0.5;
+        }
+
+        // 外部墨丝生命周期
+        this.externalTrails = this.externalTrails.filter(t => this.time - t.birth < t.life);
+        while (this.externalTrails.length < p.trailCount) this.addTrail();
+      }
+
+      render() {
+        const ctx = this.ctx;
+        const p = this.currentMood;
+        const breath = Math.sin(this.time / 4000) * p.breathRange;
+        const r = this.baseR * this.hoverScale * (1 + breath);
+
+        ctx.clearRect(0, 0, this.w, this.h);
+        ctx.save();
+        ctx.translate(this.cx + this.shakeOffset.x, this.cy + this.shakeOffset.y);
+
+        // ===== Layer 1: 球体玻璃质感底 =====
+        this.drawSphereBody(r, p);
+
+        // ===== Layer 2: 外部墨丝（粗重有重量感）=====
+        this.drawExternalTrails(r, p);
+
+        // ===== Layer 3: 主墨团（浓重浸润）=====
+        this.drawMainInk(r, p);
+
+        // ===== Layer 4: 透明水团眼睛 + 内部墨染 =====
+        this.drawEyes(r, p);
+
+        // ===== Layer 5: 水滴反光 ======
+        this.drawReflection(r);
+
+        ctx.restore();
+      }
+
+      drawSphereBody(r, p) {
+        const ctx = this.ctx;
+
+        // 球体边缘深色描边（像墨迹轮廓）
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(20, 20, 20, 0.8)';
+        ctx.fill();
+
+        // 内部玻璃质感（淡灰色）
+        const glassGrad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, 0, 0, 0, r);
+        glassGrad.addColorStop(0, 'rgba(60, 60, 60, 0.4)');
+        glassGrad.addColorStop(0.5, 'rgba(40, 40, 40, 0.25)');
+        glassGrad.addColorStop(1, 'rgba(25, 25, 25, 0.3)');
+        ctx.fillStyle = glassGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.98, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawExternalTrails(r, p) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.rotate(this.rotation);
+
+        this.externalTrails.forEach(trail => {
+          const age = this.time - trail.birth;
+          const life = age / trail.life;
+
+          let alpha = 1;
+          if (life < 0.15) alpha = life / 0.15;
+          else if (life > 0.7) alpha = 1 - (life - 0.7) / 0.3;
+          alpha *= 0.7 * p.inkDensity;
+
+          const angle = trail.angle + this.rotation * trail.speed;
+          const wobble = Math.sin(this.time / 600 + trail.phase) * 0.15;
+
+          // 起点
+          const startR = r * 1.02;
+          const sx = Math.cos(angle) * startR;
+          const sy = Math.sin(angle) * startR;
+
+          // 贝塞尔曲线向外（墨丝有弧度）
+          const midR = startR + r * 0.4 * (trail.length / 50);
+          const endR = startR + r * 0.7 * (trail.length / 50);
+
+          const cp1x = Math.cos(angle + wobble) * midR;
+          const cp1y = Math.sin(angle + wobble) * midR;
+          const cp2x = Math.cos(angle + wobble * 1.5) * endR * 0.9;
+          const cp2y = Math.sin(angle + wobble * 1.5) * endR * 0.9;
+          const ex = Math.cos(angle + wobble * 2) * endR;
+          const ey = Math.sin(angle + wobble * 2) * endR;
+
+          // 绘制粗重的墨丝（从浓到淡）
+          ctx.beginPath();
+          ctx.moveTo(sx, sy);
+          ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ex, ey);
+
+          const trailGrad = ctx.createLinearGradient(sx, sy, ex, ey);
+          trailGrad.addColorStop(0, `rgba(5, 5, 5, ${alpha})`);
+          trailGrad.addColorStop(0.5, `rgba(15, 15, 15, ${alpha * 0.7})`);
+          trailGrad.addColorStop(1, `rgba(40, 40, 40, 0)`);
+
+          ctx.strokeStyle = trailGrad;
+          ctx.lineWidth = trail.width * (1 - life * 0.4);
+          ctx.lineCap = 'round';
+          ctx.stroke();
+        });
+
+        ctx.restore();
+      }
+
+      drawMainInk(r, p) {
+        const ctx = this.ctx;
+        const mx = this.mainInk.x;
+        const my = this.mainInk.y;
+        const mr = r * (0.45 + 0.05 * Math.sin(this.time / 2500));
+
+        // 裁剪到球体内
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.95, 0, Math.PI * 2);
+        ctx.clip();
+
+        // ===== 主墨团核心（浓黑）=====
+        // 参考图特点：墨色浓重，边缘柔和晕开
+        const coreGrad = ctx.createRadialGradient(mx, my, 0, mx, my, mr);
+
+        // 核心非常黑，向外逐渐晕染变淡
+        coreGrad.addColorStop(0, `rgba(0, 0, 0, ${0.95 * p.inkDensity})`);
+        coreGrad.addColorStop(0.3, `rgba(5, 5, 5, ${0.9 * p.inkDensity})`);
+        coreGrad.addColorStop(0.5, `rgba(15, 15, 15, ${0.7 * p.inkDensity})`);
+        coreGrad.addColorStop(0.7, `rgba(30, 30, 30, ${0.4 * p.inkDensity})`);
+        coreGrad.addColorStop(0.85, `rgba(50, 50, 50, ${0.2 * p.inkDensity})`);
+        coreGrad.addColorStop(1, 'rgba(70, 70, 70, 0)');
+
+        ctx.fillStyle = coreGrad;
+        ctx.fillRect(-r, -r, r * 2, r * 2);
+
+        // ===== 墨迹浸润效果（添加一些随机的小墨团模拟浸润）=====
+        for (let i = 0; i < 6; i++) {
+          const inkAngle = (i / 6) * Math.PI * 2 + this.time / 8000;
+          const inkDist = mr * (0.5 + 0.3 * Math.sin(this.time / 3000 + i));
+          const ix = mx + Math.cos(inkAngle) * inkDist * 0.8;
+          const iy = my + Math.sin(inkAngle) * inkDist * 0.8;
+          const ir = mr * (0.15 + 0.1 * Math.sin(this.time / 2000 + i * 2));
+
+          const inkGrad = ctx.createRadialGradient(ix, iy, 0, ix, iy, ir);
+          inkGrad.addColorStop(0, `rgba(10, 10, 10, ${0.6 * p.inkDensity})`);
+          inkGrad.addColorStop(0.5, `rgba(30, 30, 30, ${0.3 * p.inkDensity})`);
+          inkGrad.addColorStop(1, 'rgba(50, 50, 50, 0)');
+
+          ctx.fillStyle = inkGrad;
+          ctx.fillRect(-r, -r, r * 2, r * 2);
+        }
+
+        ctx.restore();
+      }
+
+      drawEyes(r, p) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.95, 0, Math.PI * 2);
+        ctx.clip();
+
+        // ===== 左眼：透明水团 + 内部墨染 =====
+        const leftEyeX = -r * 0.28;
+        const leftEyeY = r * 0.1;
+        const eyeR = r * 0.18;
+
+        // 透明水团底色（白色）
+        const eyeBaseGrad = ctx.createRadialGradient(
+          leftEyeX - eyeR * 0.3, leftEyeY - eyeR * 0.3, 0,
+          leftEyeX, leftEyeY, eyeR
+        );
+        eyeBaseGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        eyeBaseGrad.addColorStop(0.6, 'rgba(250, 250, 250, 0.9)');
+        eyeBaseGrad.addColorStop(1, 'rgba(230, 230, 230, 0.8)');
+
+        ctx.beginPath();
+        ctx.arc(leftEyeX, leftEyeY, eyeR, 0, Math.PI * 2);
+        ctx.fillStyle = eyeBaseGrad;
+        ctx.fill();
+
+        // 眼睛内部墨染（参考图特点：眼睛里有墨色浸染）
+        const inkInEye = ctx.createRadialGradient(
+          leftEyeX + eyeR * 0.2, leftEyeY + eyeR * 0.3, 0,
+          leftEyeX + eyeR * 0.1, leftEyeY + eyeR * 0.2, eyeR * 0.7
+        );
+        inkInEye.addColorStop(0, `rgba(30, 30, 30, ${0.4 * p.inkDensity})`);
+        inkInEye.addColorStop(0.5, `rgba(50, 50, 50, ${0.2 * p.inkDensity})`);
+        inkInEye.addColorStop(1, 'rgba(80, 80, 80, 0)');
+
+        ctx.beginPath();
+        ctx.arc(leftEyeX, leftEyeY, eyeR * 0.9, 0, Math.PI * 2);
+        ctx.fillStyle = inkInEye;
+        ctx.fill();
+
+        // 眼睛内部瞳孔
+        ctx.beginPath();
+        ctx.arc(leftEyeX + eyeR * 0.15, leftEyeY + eyeR * 0.2, eyeR * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(20, 20, 20, ${0.5 * p.inkDensity})`;
+        ctx.fill();
+
+        // ===== 右眼：透明水团 + 内部墨染 =====
+        const rightEyeX = r * 0.28;
+        const rightEyeY = r * 0.1;
+
+        const eyeBaseGrad2 = ctx.createRadialGradient(
+          rightEyeX - eyeR * 0.3, rightEyeY - eyeR * 0.3, 0,
+          rightEyeX, rightEyeY, eyeR
+        );
+        eyeBaseGrad2.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
+        eyeBaseGrad2.addColorStop(0.6, 'rgba(250, 250, 250, 0.9)');
+        eyeBaseGrad2.addColorStop(1, 'rgba(230, 230, 230, 0.8)');
+
+        ctx.beginPath();
+        ctx.arc(rightEyeX, rightEyeY, eyeR, 0, Math.PI * 2);
+        ctx.fillStyle = eyeBaseGrad2;
+        ctx.fill();
+
+        const inkInEye2 = ctx.createRadialGradient(
+          rightEyeX + eyeR * 0.2, rightEyeY + eyeR * 0.3, 0,
+          rightEyeX + eyeR * 0.1, rightEyeY + eyeR * 0.2, eyeR * 0.7
+        );
+        inkInEye2.addColorStop(0, `rgba(30, 30, 30, ${0.4 * p.inkDensity})`);
+        inkInEye2.addColorStop(0.5, `rgba(50, 50, 50, ${0.2 * p.inkDensity})`);
+        inkInEye2.addColorStop(1, 'rgba(80, 80, 80, 0)');
+
+        ctx.beginPath();
+        ctx.arc(rightEyeX, rightEyeY, eyeR * 0.9, 0, Math.PI * 2);
+        ctx.fillStyle = inkInEye2;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(rightEyeX + eyeR * 0.15, rightEyeY + eyeR * 0.2, eyeR * 0.35, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(20, 20, 20, ${0.5 * p.inkDensity})`;
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      drawReflection(r) {
+        const ctx = this.ctx;
+
+        // ===== 左上角主高光（参考图那种柔和的大面积高光）=====
+        const mainHL = ctx.createRadialGradient(
+          -r * 0.4, -r * 0.45, 0,
+          -r * 0.35, -r * 0.4, r * 0.5
+        );
+        mainHL.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+        mainHL.addColorStop(0.4, 'rgba(255, 255, 255, 0.25)');
+        mainHL.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = mainHL;
+        ctx.beginPath();
+        ctx.ellipse(-r * 0.35, -r * 0.4, r * 0.4, r * 0.3, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 锐利高光点
+        const sharpHL = ctx.createRadialGradient(
+          -r * 0.45, -r * 0.5, 0,
+          -r * 0.43, -r * 0.48, r * 0.12
+        );
+        sharpHL.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
+        sharpHL.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = sharpHL;
+        ctx.beginPath();
+        ctx.arc(-r * 0.43, -r * 0.48, r * 0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ===== 右上角小高光 =====
+        const smallHL = ctx.createRadialGradient(
+          r * 0.25, -r * 0.38, 0,
+          r * 0.28, -r * 0.36, r * 0.12
+        );
+        smallHL.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+        smallHL.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = smallHL;
+        ctx.beginPath();
+        ctx.arc(r * 0.25, -r * 0.38, r * 0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // ===== 底部边缘光 =====
+        const rimHL = ctx.createRadialGradient(
+          0, r * 0.55, 0,
+          0, r * 0.55, r * 0.35
+        );
+        rimHL.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
+        rimHL.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.fillStyle = rimHL;
+        ctx.beginPath();
+        ctx.ellipse(0, r * 0.55, r * 0.3, r * 0.1, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      destroy() { this.running = false; }
+    }
+
+    // 初始化
+    const mainCanvas = document.getElementById('pet-canvas');
+    const mainEngine = new InkPetEngine(mainCanvas);
+
+    const floatingCanvas = document.getElementById('floating-canvas');
+    const floatingEngine = new InkPetEngine(floatingCanvas, { rotationSpeed: 0.01 });
+
+    // 情绪按钮
+    document.querySelectorAll('.mood-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        mainEngine.setMood(btn.dataset.mood);
+        floatingEngine.setMood(btn.dataset.mood);
+      });
+    });
+
+    // 交互
+    const canvasBox = document.getElementById('canvas-box');
+    canvasBox.addEventListener('mouseenter', () => mainEngine.triggerHover(true));
+    canvasBox.addEventListener('mouseleave', () => mainEngine.triggerHover(false));
+    canvasBox.addEventListener('click', () => mainEngine.triggerClick());
+
+    // 悬浮宠物拖拽
+    const floatingPet = document.getElementById('floating-pet');
+    let dragging = false, offset = { x: 0, y: 0 };
+    floatingPet.addEventListener('mousedown', e => {
+      dragging = true;
+      offset.x = e.clientX - floatingPet.offsetLeft;
+      offset.y = e.clientY - floatingPet.offsetTop;
+      floatingEngine.triggerClick();
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+      if (dragging) {
+        floatingPet.style.left = e.clientX - offset.x + 'px';
+        floatingPet.style.top = e.clientY - offset.y + 'px';
+        floatingPet.style.right = 'auto';
+        floatingPet.style.bottom = 'auto';
+      }
+    });
+    document.addEventListener('mouseup', () => dragging = false);
+    floatingPet.addEventListener('mouseenter', () => floatingEngine.triggerHover(true));
+    floatingPet.addEventListener('mouseleave', () => floatingEngine.triggerHover(false));
+  </script>
+</body>
+</html>

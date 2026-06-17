@@ -19,9 +19,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
         }`}
       >
         <p className="whitespace-pre-wrap break-words">{message.content}</p>
-        <p className="text-xs opacity-60 mt-1 text-right">
-          {message.timestamp.toLocaleTimeString()}
-        </p>
+        <p className="text-xs opacity-60 mt-1 text-right">{message.timestamp.toLocaleTimeString()}</p>
       </div>
     </div>
   )

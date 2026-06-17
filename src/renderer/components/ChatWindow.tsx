@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { useChat } from '../hooks/useChat'
 import type { ChatWindowProps } from '../types'
 
@@ -19,15 +18,15 @@ type TabType = 'chat' | 'inspirations'
 const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   // 标签页状态
   const [activeTab, setActiveTab] = useState<TabType>('chat')
-  
+
   // 消息列表
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { id: 'welcome', type: 'ai', content: '您好，我是墨滴助手。有什么可以帮助您的？', avatar: '🖤' }
+    { id: 'welcome', type: 'ai', content: '您好，我是墨滴助手。有什么可以帮助您的？', avatar: '🖤' },
   ])
-  
+
   // 输入值
   const [inputValue, setInputValue] = useState('')
-  
+
   // 消息列表滚动引用
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -48,18 +47,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
   // 当 chatMessages 变化时，更新本地消息
   useEffect(() => {
     // 过滤出助手消息并添加到本地消息列表
-    const latestAssistant = chatMessages.filter(m => m.role === 'assistant')
-    if (latestAssistant.length > messages.filter(m => m.type === 'ai').length) {
-      const newMessages = latestAssistant.slice(messages.filter(m => m.type === 'ai').length)
-      newMessages.forEach(msg => {
-        setMessages(prev => [
-          ...prev.filter(m => !m.content.includes('思考中')),
+    const latestAssistant = chatMessages.filter((m) => m.role === 'assistant')
+    if (latestAssistant.length > messages.filter((m) => m.type === 'ai').length) {
+      const newMessages = latestAssistant.slice(messages.filter((m) => m.type === 'ai').length)
+      newMessages.forEach((msg) => {
+        setMessages((prev) => [
+          ...prev.filter((m) => !m.content.includes('思考中')),
           {
             id: msg.id,
             type: 'ai' as const,
             content: msg.content,
-            avatar: '🖤'
-          }
+            avatar: '🖤',
+          },
         ])
       })
     }
@@ -73,24 +72,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
       id: Date.now().toString(),
       type: 'user',
       content: inputValue.trim(),
-      avatar: '👤'
+      avatar: '👤',
     }
-    
-    setMessages(prev => [...prev, userMsg])
+
+    setMessages((prev) => [...prev, userMsg])
     const text = inputValue.trim()
     setInputValue('')
 
     try {
       await sendMessage(text)
     } catch (error) {
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           type: 'ai',
           content: '抱歉，连接模型时出错了。请检查设置。',
-          avatar: '🖤'
-        }
+          avatar: '🖤',
+        },
       ])
     }
   }
@@ -105,16 +104,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
 
   // 新建对话
   const handleNewChat = () => {
-    setMessages([
-      { id: 'welcome', type: 'ai', content: '您好，我是墨滴助手。有什么可以帮助您的？', avatar: '🖤' }
-    ])
+    setMessages([{ id: 'welcome', type: 'ai', content: '您好，我是墨滴助手。有什么可以帮助您的？', avatar: '🖤' }])
     clearMessages()
     inputRef.current?.focus()
   }
 
   // 保存灵感
   const handleSaveInspiration = async () => {
-    const lastMessage = messages.filter(m => m.type === 'ai').pop()
+    const lastMessage = messages.filter((m) => m.type === 'ai').pop()
     if (lastMessage) {
       await saveAsInspiration(lastMessage.content)
     }
@@ -198,7 +195,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ onClose }) => {
                     border: 'none',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    fontSize: '13px'
+                    fontSize: '13px',
                   }}
                 >
                   保存最后回复

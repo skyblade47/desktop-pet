@@ -10,7 +10,7 @@ let tray: Tray | null = null
 export const createTray = (mainWindow: BrowserWindow) => {
   // 确定图标路径
   let iconPath: string
-  
+
   if (app.isPackaged) {
     // 生产环境
     iconPath = path.join(process.resourcesPath, 'build', 'icon.png')
@@ -18,9 +18,9 @@ export const createTray = (mainWindow: BrowserWindow) => {
     // 开发环境 - 使用正确的路径
     iconPath = path.join(__dirname, '..', '..', 'build', 'icon.png')
   }
-  
+
   console.log('[Tray] Icon path:', iconPath)
-  
+
   try {
     tray = new Tray(iconPath)
   } catch (error) {
@@ -28,7 +28,7 @@ export const createTray = (mainWindow: BrowserWindow) => {
     // 如果图标加载失败，继续运行（托盘不是必需的）
     return
   }
-  
+
   // 创建右键菜单
   const contextMenu = Menu.buildFromTemplate([
     {
@@ -52,10 +52,10 @@ export const createTray = (mainWindow: BrowserWindow) => {
       },
     },
   ])
-  
+
   tray.setToolTip('桌面宠物 - 灵感助手')
   tray.setContextMenu(contextMenu)
-  
+
   // 点击托盘图标切换窗口显示
   tray.on('click', () => {
     if (mainWindow.isVisible()) {

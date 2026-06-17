@@ -34,11 +34,7 @@ export class TaskScheduler {
     }
   }
 
-  scheduleBatch(
-    tasks: Task[],
-    batchSize = this.defaultBatchSize,
-    delayMs = this.defaultDelayMs
-  ): () => void {
+  scheduleBatch(tasks: Task[], batchSize = this.defaultBatchSize, delayMs = this.defaultDelayMs): () => void {
     const taskIds = new Set(tasks.map((t) => t.id))
     let currentIndex = 0
 

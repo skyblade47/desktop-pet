@@ -89,11 +89,7 @@ export class SyncManager {
         url: `http://${localIp || '127.0.0.1'}:${DEFAULT_PORT}`,
       }
 
-      this.server = new SyncServer(
-        DEFAULT_PORT,
-        deviceInfo,
-        this.handleInspirationsReceived.bind(this)
-      )
+      this.server = new SyncServer(DEFAULT_PORT, deviceInfo, this.handleInspirationsReceived.bind(this))
       await this.server.start()
 
       // 3. 启动定时同步
@@ -131,14 +127,12 @@ export class SyncManager {
   /**
    * 添加待同步的灵感
    */
-  async addInspirationToSync(
-    localInspiration: {
-      id: string
-      content: string
-      tags?: string[]
-      chatHistory?: Array<{ role: string; content: string; timestamp: string }>
-    }
-  ): Promise<SyncInspiration> {
+  async addInspirationToSync(localInspiration: {
+    id: string
+    content: string
+    tags?: string[]
+    chatHistory?: Array<{ role: string; content: string; timestamp: string }>
+  }): Promise<SyncInspiration> {
     const syncInspiration = toSyncInspiration(localInspiration)
     this.syncQueue.push(syncInspiration)
 
@@ -203,10 +197,7 @@ export class SyncManager {
   /**
    * 推送到指定设备
    */
-  private async pushToDevice(
-    device: SyncDevice,
-    inspirations: SyncInspiration[]
-  ): Promise<SyncResponse> {
+  private async pushToDevice(device: SyncDevice, inspirations: SyncInspiration[]): Promise<SyncResponse> {
     const response = await fetch(`${device.url}/api/inspirations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -226,10 +217,7 @@ export class SyncManager {
   /**
    * 处理接收到的灵感（来自其他设备）
    */
-  private async handleInspirationsReceived(
-    inspirations: SyncInspiration[],
-    source: string
-  ): Promise<SyncResponse> {
+  private async handleInspirationsReceived(inspirations: SyncInspiration[], source: string): Promise<SyncResponse> {
     console.log(`[SyncManager] Received ${inspirations.length} from ${source}`)
 
     let processed = 0
@@ -270,11 +258,14 @@ export class SyncManager {
       clearInterval(this.syncInterval)
     }
 
-    this.syncInterval = setInterval(() => {
-      if (this.syncQueue.length > 0) {
-        this.pushToBartender().catch(console.error)
-      }
-    }, this.config.syncInterval * 60 * 1000)
+    this.syncInterval = setInterval(
+      () => {
+        if (this.syncQueue.length > 0) {
+          this.pushToBartender().catch(console.error)
+        }
+      },
+      this.config.syncInterval * 60 * 1000
+    )
 
     console.log(`[SyncManager] Auto-sync interval started (${this.config.syncInterval} min)`)
   }
@@ -333,7 +324,7 @@ export class SyncManager {
    */
   updateConfig(config: Partial<SyncConfig>): void {
     this.config = { ...this.config, ...config }
-    
+
     // 如果自动同步状态改变，重新启动定时任务
     if ('autoSync' in config && this.isRunning) {
       if (config.autoSync) {
@@ -343,7 +334,7 @@ export class SyncManager {
         this.syncInterval = null
       }
     }
-    
+
     // 如果同步间隔改变，重新启动定时任务
     if ('syncInterval' in config && this.config.autoSync && this.isRunning) {
       this.startSyncInterval()

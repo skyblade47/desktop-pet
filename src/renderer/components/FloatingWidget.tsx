@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, type TargetAndTransition } from 'framer-motion'
 
 interface FloatingWidgetProps {
   /** 点击回调 */
@@ -15,7 +15,7 @@ interface FloatingWidgetProps {
 const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }) => {
   // 展开状态
   const [isExpanded, setIsExpanded] = useState(false)
-  
+
   // 状态文字
   const [statusText, setStatusText] = useState('')
   const [showStatus, setShowStatus] = useState(false)
@@ -41,15 +41,13 @@ const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }
   }
 
   // 呼吸动画变体
-  const breatheVariants = {
-    animate: {
-      scaleY: [1, 1.06, 0.96, 1],
-      scaleX: [1, 0.96, 1.04, 1],
-      transition: {
-        duration: 3.2,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      },
+  const breatheAnimation: TargetAndTransition = {
+    scaleY: [1, 1.06, 0.96, 1],
+    scaleX: [1, 0.96, 1.04, 1],
+    transition: {
+      duration: 3.2,
+      repeat: Infinity,
+      ease: 'easeInOut',
     },
   }
 
@@ -62,8 +60,7 @@ const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }
           onClick={handleClick}
           onContextMenu={handleContextMenu}
           whileTap={{ scale: [1, 1.15, 0.92, 1.05, 1] }}
-          variants={breatheVariants}
-          animate="animate"
+          animate={breatheAnimation}
         >
           {/* 状态文字 */}
           <AnimatePresence>
@@ -206,7 +203,7 @@ const FloatingWidget: React.FC<FloatingWidgetProps> = ({ onClick, onRightClick }
                   justifyContent: 'center',
                   fontSize: '10px',
                   color: '#fff',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
                 }}
               >
                 ✨

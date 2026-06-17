@@ -26,9 +26,7 @@ export class DeviceDiscovery {
       // 动态导入 bonjour 库
       const bonjourModule = await import('bonjour')
       // bonjour 可能需要调用才能获取实例
-      this.bonjourInstance = typeof bonjourModule.default === 'function' 
-        ? bonjourModule.default() 
-        : bonjourModule
+      this.bonjourInstance = typeof bonjourModule.default === 'function' ? bonjourModule.default() : bonjourModule
       const service = this.bonjourInstance
 
       // 发布自身服务

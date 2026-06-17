@@ -285,10 +285,7 @@ export interface ChatMessage {
  */
 export interface UseLocalModelReturn {
   /** 聊天方法 */
-  chat: (
-    messages: ChatMessage[],
-    onStream?: (chunk: string) => void
-  ) => Promise<string>
+  chat: (messages: ChatMessage[], onStream?: (chunk: string) => void) => Promise<string>
   /** 测试连接 */
   testConnection: () => Promise<boolean>
   /** 是否已连接 */

@@ -1,14 +1,6 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import type { 
-  AppConfig, 
-  ChatState, 
-  ConfigState, 
-  Inspiration, 
-  InspirationState, 
-  Message,
-  AppState
-} from '../types'
+import type { AppConfig, ChatState, ConfigState, Inspiration, InspirationState, Message, AppState } from '../types'
 
 /**
  * 默认应用配置
@@ -30,62 +22,56 @@ const defaultConfig: AppConfig = {
  */
 export const useAppStore = create<ChatState & ConfigState & InspirationState & AppState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       // ============================================
       // Chat State
       // ============================================
-      
+
       messages: [],
       isLoading: false,
-      
-      addMessage: (message: Message) =>
-        set((state) => ({ messages: [...state.messages, message] })),
-      
+
+      addMessage: (message: Message) => set((state) => ({ messages: [...state.messages, message] })),
+
       clearMessages: () => set({ messages: [] }),
-      
+
       setIsLoading: (loading: boolean) => set({ isLoading: loading }),
 
       // ============================================
       // Config State
       // ============================================
-      
+
       config: defaultConfig,
-      
-      setConfig: (newConfig: Partial<AppConfig>) =>
-        set((state) => ({ config: { ...state.config, ...newConfig } })),
+
+      setConfig: (newConfig: Partial<AppConfig>) => set((state) => ({ config: { ...state.config, ...newConfig } })),
 
       // ============================================
       // Inspiration State
       // ============================================
-      
+
       inspirations: [],
-      
+
       addInspiration: (inspiration: Inspiration) =>
         set((state) => ({ inspirations: [...state.inspirations, inspiration] })),
-      
+
       updateInspiration: (id: string, updates: Partial<Inspiration>) =>
         set((state) => ({
-          inspirations: state.inspirations.map((i) =>
-            i.id === id ? { ...i, ...updates } : i
-          ),
+          inspirations: state.inspirations.map((i) => (i.id === id ? { ...i, ...updates } : i)),
         })),
-      
+
       deleteInspiration: (id: string) =>
         set((state) => ({
           inspirations: state.inspirations.filter((i) => i.id !== id),
         })),
-      
+
       markAsSynced: (id: string) =>
         set((state) => ({
-          inspirations: state.inspirations.map((i) =>
-            i.id === id ? { ...i, status: 'synced' } : i
-          ),
+          inspirations: state.inspirations.map((i) => (i.id === id ? { ...i, status: 'synced' } : i)),
         })),
 
       // ============================================
       // App State
       // ============================================
-      
+
       initialize: () => {
         // 应用初始化，可以在这里添加初始化逻辑
         console.log('[App] Initialized')

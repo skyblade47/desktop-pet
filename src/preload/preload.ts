@@ -12,14 +12,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendMessage: (channel: string, data: unknown) => {
     ipcRenderer.send(channel, data)
   },
-  
+
   /**
    * 监听主进程消息
    */
   onMessage: (channel: string, callback: (...args: unknown[]) => void) => {
     ipcRenderer.on(channel, (_, ...args) => callback(...args))
   },
-  
+
   /**
    * 调用主进程方法并获取返回值
    */
@@ -95,12 +95,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   /**
    * 更新同步配置
    */
-  syncUpdateConfig: (config: Partial<{
-    enabled: boolean
-    autoSync: boolean
-    syncInterval: number
-    deviceName: string
-  }>) => {
+  syncUpdateConfig: (
+    config: Partial<{
+      enabled: boolean
+      autoSync: boolean
+      syncInterval: number
+      deviceName: string
+    }>
+  ) => {
     return ipcRenderer.invoke('sync:updateConfig', config)
   },
 

@@ -28,16 +28,14 @@ export function calculateChecksum(content: string): string {
 /**
  * 将本地灵感转换为同步格式
  */
-export function toSyncInspiration(
-  localInspiration: {
-    id: string
-    content: string
-    tags?: string[]
-    chatHistory?: Array<{ role: string; content: string; timestamp: string }>
-  }
-): SyncInspiration {
+export function toSyncInspiration(localInspiration: {
+  id: string
+  content: string
+  tags?: string[]
+  chatHistory?: Array<{ role: string; content: string; timestamp: string }>
+}): SyncInspiration {
   const now = nowISO()
-  
+
   return {
     id: localInspiration.id,
     content: localInspiration.content,
@@ -69,32 +67,29 @@ export function validateInspiration(inspiration: SyncInspiration): boolean {
   if (!inspiration.id || !inspiration.content) {
     return false
   }
-  
+
   if (!['desktop-pet', 'inspiration-bartender', 'writing-coach'].includes(inspiration.source)) {
     return false
   }
-  
+
   if (!['local', 'pending', 'synced'].includes(inspiration.syncStatus)) {
     return false
   }
-  
+
   return true
 }
 
 /**
  * 比较两个灵感（用于冲突检测）
  */
-export function compareInspirations(
-  a: SyncInspiration,
-  b: SyncInspiration
-): 'a' | 'b' | 'equal' {
+export function compareInspirations(a: SyncInspiration, b: SyncInspiration): 'a' | 'b' | 'equal' {
   if (a.checksum === b.checksum) {
     return 'equal'
   }
-  
+
   if (new Date(a.updatedAt) > new Date(b.updatedAt)) {
     return 'a'
   }
-  
+
   return 'b'
 }

@@ -9,17 +9,17 @@
 
 :root {
   /* ---- 木板色系 ---- */
-  --board-light: #D4C4B0;    /* 浅木色 - 用于卡片背景、输入区域 */
-  --board-medium: #8B7355;   /* 中木色 - 用于边框、次要元素 */
-  --board-dark: #4A3820;     /* 深木色 - 用于主要文字、头部背景 */
-  --paper-white: #FFFDF7;   /* 纸张白 - 用于内容背景 */
+  --board-light: #d4c4b0; /* 浅木色 - 用于卡片背景、输入区域 */
+  --board-medium: #8b7355; /* 中木色 - 用于边框、次要元素 */
+  --board-dark: #4a3820; /* 深木色 - 用于主要文字、头部背景 */
+  --paper-white: #fffdf7; /* 纸张白 - 用于内容背景 */
   --paper-shadow: rgba(0, 0, 0, 0.1); /* 纸张阴影 */
 
   /* ---- 木板语义色 ---- */
-  --accent-blue: #4A7C9B;          /* 蓝色强调 - 用于链接、交互 */
-  --accent-green: #6B9E7D;         /* 绿色 - 用于成功，完成状态 */
-  --accent-orange: #D48B5A;       /* 橙色 - 用于警告、通知 */
-  --accent-red: #C75B5B;          /* 红色 - 用于错误、删除 */
+  --accent-blue: #4a7c9b; /* 蓝色强调 - 用于链接、交互 */
+  --accent-green: #6b9e7d; /* 绿色 - 用于成功，完成状态 */
+  --accent-orange: #d48b5a; /* 橙色 - 用于警告、通知 */
+  --accent-red: #c75b5b; /* 红色 - 用于错误、删除 */
 
   /* ---- 字体 ---- */
   --font-sans: 'Noto Sans SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -31,7 +31,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -85,9 +86,16 @@ html, body {
 }
 
 @keyframes pet-breathe {
-  0%, 100% { transform: scale(1, 1); }
-  35% { transform: scale(0.96, 1.06); }
-  65% { transform: scale(1.04, 0.96); }
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  35% {
+    transform: scale(0.96, 1.06);
+  }
+  65% {
+    transform: scale(1.04, 0.96);
+  }
 }
 
 /* 通知徽章 */
@@ -422,7 +430,7 @@ html, body {
 }
 
 .pet-expand-send:hover:not(:disabled) {
-  background: #3A6B8B;
+  background: #3a6b8b;
 }
 
 .pet-expand-send:disabled {
@@ -554,7 +562,7 @@ html, body {
 }
 
 .settings-btn-primary:hover {
-  background: #3A6B8B;
+  background: #3a6b8b;
 }
 
 .settings-btn-primary:disabled {

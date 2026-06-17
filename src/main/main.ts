@@ -16,16 +16,16 @@ const createWindow = () => {
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize
 
   mainWindow = new BrowserWindow({
-    width: 120,  // 窗口宽度 - 刚好容纳桌宠
+    width: 120, // 窗口宽度 - 刚好容纳桌宠
     height: 100, // 窗口高度 - 刚好容纳桌宠
     x: screenWidth - 150, // 屏幕右下角
     y: screenHeight - 130,
-    frame: false,           // 无边框
-    transparent: true,       // 透明背景
-    alwaysOnTop: true,      // 始终在最前
-    resizable: false,        // 不可调整大小
-    skipTaskbar: true,       // 不显示在任务栏
-    hasShadow: false,        // 无阴影
+    frame: false, // 无边框
+    transparent: true, // 透明背景
+    alwaysOnTop: true, // 始终在最前
+    resizable: false, // 不可调整大小
+    skipTaskbar: true, // 不显示在任务栏
+    hasShadow: false, // 无阴影
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),
       nodeIntegration: false,
@@ -93,7 +93,7 @@ app.whenReady().then(async () => {
   })
 
   createWindow()
-  
+
   // 初始化同步服务（不阻塞应用启动）
   initSyncService().catch((error) => {
     console.error('[Main] Sync service initialization failed:', error)

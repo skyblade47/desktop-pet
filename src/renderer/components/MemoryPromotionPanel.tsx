@@ -207,11 +207,7 @@ const MemoryPromotionPanel: React.FC<MemoryPromotionPanelProps> = ({ projectId, 
                 >
                   {/* 类型和时间 */}
                   <div className="flex items-center justify-between mb-2">
-                    <span
-                      className={`px-2 py-0.5 text-xs rounded border ${getTypeColor(
-                        candidate.type
-                      )}`}
-                    >
+                    <span className={`px-2 py-0.5 text-xs rounded border ${getTypeColor(candidate.type)}`}>
                       {getTypeName(candidate.type)}
                     </span>
                     <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -221,9 +217,7 @@ const MemoryPromotionPanel: React.FC<MemoryPromotionPanelProps> = ({ projectId, 
                   </div>
 
                   {/* 内容 */}
-                  <p className="text-gray-200 text-sm mb-3 whitespace-pre-wrap break-words">
-                    {candidate.content}
-                  </p>
+                  <p className="text-gray-200 text-sm mb-3 whitespace-pre-wrap break-words">{candidate.content}</p>
 
                   {/* 置信度 */}
                   {candidate.confidence !== undefined && (
@@ -235,9 +229,7 @@ const MemoryPromotionPanel: React.FC<MemoryPromotionPanelProps> = ({ projectId, 
                           style={{ width: `${candidate.confidence * 100}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-400">
-                        {Math.round(candidate.confidence * 100)}%
-                      </span>
+                      <span className="text-xs text-gray-400">{Math.round(candidate.confidence * 100)}%</span>
                     </div>
                   )}
 

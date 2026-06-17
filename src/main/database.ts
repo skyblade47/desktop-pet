@@ -157,12 +157,8 @@ const createTables = (): void => {
     `)
 
     // 创建索引
-    db.run(
-      `CREATE INDEX IF NOT EXISTS idx_memory_promotion_project ON memory_promotion_candidates(project_id, status)`
-    )
-    db.run(
-      `CREATE INDEX IF NOT EXISTS idx_knowledge_items_project ON knowledge_items(project_id)`
-    )
+    db.run(`CREATE INDEX IF NOT EXISTS idx_memory_promotion_project ON memory_promotion_candidates(project_id, status)`)
+    db.run(`CREATE INDEX IF NOT EXISTS idx_knowledge_items_project ON knowledge_items(project_id)`)
   } catch (error) {
     console.error('[Database] 创建表失败:', error)
   }
@@ -175,18 +171,17 @@ export const getDatabase = (): SqlJsDatabase | null => db
 
 // ==================== 项目相关方法 ====================
 
-export const createProject = (data: {
-  id: string
-  name: string
-  description?: string
-}): void => {
+export const createProject = (data: { id: string; name: string; description?: string }): void => {
   if (!db) return
 
   const now = Date.now()
-  db.run(
-    `INSERT INTO projects (id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
-    [data.id, data.name, data.description || '', now, now]
-  )
+  db.run(`INSERT INTO projects (id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`, [
+    data.id,
+    data.name,
+    data.description || '',
+    now,
+    now,
+  ])
   saveDatabase()
 }
 
@@ -295,10 +290,7 @@ export const getKnowledgeItems = (
   if (!db) return []
 
   try {
-    const result = db.exec(
-      `SELECT * FROM knowledge_items WHERE project_id = ? ORDER BY created_at DESC`,
-      [projectId]
-    )
+    const result = db.exec(`SELECT * FROM knowledge_items WHERE project_id = ? ORDER BY created_at DESC`, [projectId])
     if (result.length === 0) return []
 
     return result[0].values.map((row) => ({

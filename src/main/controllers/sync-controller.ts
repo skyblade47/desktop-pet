@@ -6,12 +6,15 @@ export const setupSyncHandlers = (): void => {
   // 添加灵感到同步队列
   ipcMain.handle(
     IPC_CHANNELS.SYNC_ADD_INSPIRATION,
-    async (_, inspiration: {
-      id: string
-      content: string
-      tags?: string[]
-      chatHistory?: Array<{ role: string; content: string; timestamp: string }>
-    }) => {
+    async (
+      _,
+      inspiration: {
+        id: string
+        content: string
+        tags?: string[]
+        chatHistory?: Array<{ role: string; content: string; timestamp: string }>
+      }
+    ) => {
       try {
         const syncManager = SyncManager.getInstance()
         const result = await syncManager.addInspirationToSync(inspiration)
@@ -98,12 +101,15 @@ export const setupSyncHandlers = (): void => {
   // 更新同步配置
   ipcMain.handle(
     IPC_CHANNELS.SYNC_UPDATE_CONFIG,
-    (_, config: Partial<{
-      enabled: boolean
-      autoSync: boolean
-      syncInterval: number
-      deviceName: string
-    }>) => {
+    (
+      _,
+      config: Partial<{
+        enabled: boolean
+        autoSync: boolean
+        syncInterval: number
+        deviceName: string
+      }>
+    ) => {
       try {
         const syncManager = SyncManager.getInstance()
         syncManager.updateConfig(config)

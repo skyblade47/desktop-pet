@@ -17,15 +17,15 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
   const [modelApiKey, setModelApiKey] = useState('')
   const [modelName, setModelName] = useState('')
   const [bartenderUrl, setBartenderUrl] = useState('')
-  
+
   // 连接状态
   const [connectionStatus, setConnectionStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle')
   const [connectionMessage, setConnectionMessage] = useState('')
 
   // 从store获取配置
-  const { config, setConfig } = useAppStore(state => ({
+  const { config, setConfig } = useAppStore((state) => ({
     config: state.config,
-    setConfig: state.setConfig
+    setConfig: state.setConfig,
   }))
 
   // 本地模型
@@ -45,7 +45,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
   const handleTestConnection = async () => {
     setConnectionStatus('testing')
     setConnectionMessage('正在测试连接...')
-    
+
     try {
       const result = await testConnection()
       if (result) {
@@ -85,14 +85,20 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
   return (
     <>
       {/* 遮罩层 */}
-      <div className="overlay" onClick={onClose} />
-      
+      <div
+        className="overlay"
+        onClick={onClose}
+      />
+
       {/* 设置面板 */}
       <div className="settings-panel">
         {/* 头部 */}
         <div className="settings-header">
           <span>⚙️ 设置</span>
-          <button className="settings-close" onClick={onClose}>
+          <button
+            className="settings-close"
+            onClick={onClose}
+          >
             ×
           </button>
         </div>
@@ -102,7 +108,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
           {/* 本地模型配置 */}
           <div className="settings-section">
             <div className="settings-section-title">🤖 本地模型配置</div>
-            
+
             <div className="settings-field">
               <label className="settings-label">API 地址</label>
               <input
@@ -144,9 +150,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
               >
                 {connectionStatus === 'testing' ? '测试中...' : '测试连接'}
               </button>
-              
+
               {connectionMessage && (
-                <div className={`settings-status ${connectionStatus}`} style={{ marginTop: '8px' }}>
+                <div
+                  className={`settings-status ${connectionStatus}`}
+                  style={{ marginTop: '8px' }}
+                >
                   {connectionStatus === 'success' && '✓ '}
                   {connectionStatus === 'error' && '✗ '}
                   {connectionMessage}
@@ -158,7 +167,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
           {/* 同步配置 */}
           <div className="settings-section">
             <div className="settings-section-title">🔗 同步配置</div>
-            
+
             <div className="settings-field">
               <label className="settings-label">灵感调酒师地址</label>
               <input
@@ -180,9 +189,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
             <div style={{ fontSize: '12px', color: 'var(--board-medium)' }}>
               <p>桌面宠物 - 灵感助手</p>
               <p style={{ marginTop: '4px' }}>版本 0.1.0</p>
-              <p style={{ marginTop: '8px', opacity: 0.7 }}>
-                连接本地 AI 模型，帮助您记录和完善灵感
-              </p>
+              <p style={{ marginTop: '8px', opacity: 0.7 }}>连接本地 AI 模型，帮助您记录和完善灵感</p>
             </div>
           </div>
         </div>

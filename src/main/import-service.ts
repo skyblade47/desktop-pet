@@ -34,10 +34,7 @@ async function parsePdf(filePath: string): Promise<string> {
   return data.text
 }
 
-async function importFileByExtension(
-  filePath: string,
-  ext: string
-): Promise<{ content: string } | { error: string }> {
+async function importFileByExtension(filePath: string, ext: string): Promise<{ content: string } | { error: string }> {
   switch (ext) {
     case '.md':
     case '.txt': {

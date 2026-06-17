@@ -9,7 +9,7 @@ import type { UseLocalModelReturn, ChatMessage } from '../types'
 export const useLocalModel = (): UseLocalModelReturn => {
   // 获取配置
   const config = useAppStore((state) => state.config)
-  
+
   // 连接状态
   const [isConnected, setIsConnected] = useState(false)
 
@@ -17,10 +17,7 @@ export const useLocalModel = (): UseLocalModelReturn => {
    * 聊天方法
    */
   const chat = useCallback(
-    async (
-      messages: ChatMessage[],
-      onStream?: (chunk: string) => void
-    ): Promise<string> => {
+    async (messages: ChatMessage[], onStream?: (chunk: string) => void): Promise<string> => {
       try {
         const response = await fetch(`${config.modelApi.baseUrl}/chat/completions`, {
           method: 'POST',

@@ -12,12 +12,12 @@ import { useAppStore } from './store/useStore'
 const App: React.FC = () => {
   // 聊天窗口状态
   const [isChatOpen, setIsChatOpen] = useState(false)
-  
+
   // 设置面板状态
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  
+
   // 初始化应用状态
-  const initApp = useAppStore(state => state.initialize)
+  const initApp = useAppStore((state) => state.initialize)
 
   // 初始化
   useEffect(() => {
@@ -57,11 +57,7 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       {/* 设置面板 */}
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <SettingsPanel onClose={() => setIsSettingsOpen(false)} />
-        )}
-      </AnimatePresence>
+      <AnimatePresence>{isSettingsOpen && <SettingsPanel onClose={() => setIsSettingsOpen(false)} />}</AnimatePresence>
     </div>
   )
 }

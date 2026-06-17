@@ -11,10 +11,7 @@ export class SyncServer {
   private server: Server | null = null
   private port: number
   private deviceInfo: SyncDevice
-  private onInspirationsReceived: ((
-    inspirations: any[],
-    source: string
-  ) => Promise<SyncResponse>) | null = null
+  private onInspirationsReceived: ((inspirations: any[], source: string) => Promise<SyncResponse>) | null = null
 
   constructor(
     port: number,
