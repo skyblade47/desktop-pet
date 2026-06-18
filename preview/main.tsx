@@ -1,13 +1,10 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App'
-import V2Preview from './pages/V2Preview'
+import V2Preview from '../src/renderer/pages/V2Preview'
 import './index.css'
-
-const isV2Preview = window.location.search.includes('preview=v2')
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {isV2Preview ? <V2Preview /> : <App />}
+    <V2Preview />
   </React.StrictMode>
 )

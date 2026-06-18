@@ -1,10 +1,11 @@
 {
   "name": "desktop-pet",
-  "version": "0.1.3",
-  "description": "桌面宠物 - 灵感助手",
+  "version": "0.2.0",
+  "description": "桌面宠物 - 灵感助手 (V2: Three.js 水墨球体引擎)",
   "main": "./out/main/main.js",
   "scripts": {
     "dev": "node scripts/start.js",
+    "dev:preview": "vite --config preview/vite.config.ts",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
     "pack": "electron-builder --dir",
@@ -16,6 +17,8 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
+    "@react-three/drei": "^9.117.3",
+    "@react-three/fiber": "^8.17.10",
     "bonjour": "^3.5.0",
     "electron-log": "^5.2.4",
     "framer-motion": "^12.40.0",
@@ -25,6 +28,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "sql.js": "^1.11.0",
+    "three": "^0.170.0",
     "uuid": "^11.0.5",
     "zustand": "^5.0.3"
   },
@@ -36,6 +40,7 @@
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@types/sql.js": "^1.4.9",
+    "@types/three": "^0.170.0",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
