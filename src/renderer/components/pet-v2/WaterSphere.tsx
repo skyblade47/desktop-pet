@@ -3,6 +3,9 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import type { WaterSphereParams } from './types'
 import { createInkSphereMaterial, updateInkSphereUniforms } from './shaders/waterSphereMaterial'
+import Bubbles from './Bubbles'
+import InkBlob from './InkBlob'
+import Eyes from './Eyes'
 
 interface WaterSphereProps {
   params: WaterSphereParams
@@ -96,56 +99,33 @@ const WaterSphere: React.FC<WaterSphereProps> = ({ params }) => {
     const inkDensity = params.inkDensity // 0 ~ 1
     const inkSpread = params.inkSpread // 0 ~ 1
     const backlight = params.backlightStrength // 0 ~ 1
-    const opacity = 0.42 + params.transparency * 0.52 // 0.42 ~ 0.94
+    const opacity = 0.18 + params.transparency * 0.52 // 0.18 ~ 0.70
 
     const elapsed = state.clock.getElapsedTime()
 
-    // ══════════════════════════════════════════════════
-    // 液体异步多轴缩放 — 取代均匀 setScalar
-    //   各轴以不同频率/相位/幅度独立呼吸，
-    //   模拟液体在各方向的异步形变而不是固体整体膨胀
-    // ══════════════════════════════════════════════════
-    if (params.breathEnabled) {
-      const t = elapsed
+    // 液体异步多轴缩放 — 默认基态呼吸
+    const t = elapsed
+    const scaleX = 1 + Math.sin(t * 0.75 + 0.0) * 0.01
+    const scaleY = 1 + Math.sin(t * 1.1 + 1.4) * 0.012
+    const scaleZ = 1 + Math.sin(t * 0.92 + 2.8) * 0.008
+    sphereRef.current.scale.set(scaleX, scaleY, scaleZ)
 
-      // 主轴呼吸 — 不同频率避免同步
-      const scaleX = 1 + Math.sin(t * 0.75 + 0.0) * 0.022 // 横向慢
-      const scaleY = 1 + Math.sin(t * 1.1 + 1.4) * 0.026 // 纵向略快、幅度略大（重力方向更软）
-      const scaleZ = 1 + Math.sin(t * 0.92 + 2.8) * 0.019 // 深度方向互补
-
-      sphereRef.current.scale.set(scaleX, scaleY, scaleZ)
-
-      // 顶点级表面形变幅度（配合异步缩放增强液体感）
-      const breathAmp = 1.0
-      updateInkSphereUniforms(
-        material,
-        specPower,
-        specStr,
-        fresnelPower,
-        fresnelStr,
-        inkDensity,
-        inkSpread,
-        backlight,
-        opacity,
-        elapsed,
-        breathAmp
-      )
-    } else {
-      sphereRef.current.scale.set(1, 1, 1)
-      updateInkSphereUniforms(
-        material,
-        specPower,
-        specStr,
-        fresnelPower,
-        fresnelStr,
-        inkDensity,
-        inkSpread,
-        backlight,
-        opacity,
-        elapsed,
-        0.0
-      )
-    }
+    // 顶点级表面波澜
+    const breathAmp = params.breathAmplitude
+    updateInkSphereUniforms(
+      material,
+      specPower,
+      specStr,
+      fresnelPower,
+      fresnelStr,
+      inkDensity,
+      inkSpread,
+      backlight,
+      opacity,
+      params.inkMarksStrength,
+      elapsed,
+      breathAmp
+    )
 
     sphereRef.current.rotation.y = Math.sin(elapsed * 0.18) * 0.08
   })
@@ -170,6 +150,18 @@ const WaterSphere: React.FC<WaterSphereProps> = ({ params }) => {
 
       {/* 内部柔光 */}
       <InnerGlow radius={params.radius} />
+
+      {/* 内部气泡 */}
+      <Bubbles
+        count={params.bubbleCount}
+        sphereRadius={params.radius}
+      />
+
+      {/* 墨团 */}
+      <InkBlob params={{ blobSize: params.blobSize, blobDensity: params.blobDensity }} />
+
+      {/* 双眼 */}
+      <Eyes />
     </group>
   )
 }

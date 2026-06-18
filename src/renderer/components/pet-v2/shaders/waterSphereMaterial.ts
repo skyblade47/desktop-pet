@@ -4,11 +4,12 @@ import * as THREE from 'three'
  *
  * 模拟"悬浮在清水中的墨滴球体"效果：
  *   1. 内部墨色密度场 — 左上偏浓黑墨，右下偏淡半透明灰（水墨晕染渐变）
- *   2. Lambert 漫反射 — 亮面/暗面基础立体感
- *   3. Blinn-Phong 高光 — 湿表面光泽，自然过渡
- *   4. 背光透射 — dot(N,-L) 让光线穿透球体后从暗面透出，是水珠"晶莹"的关键
- *   5. Fresnel 边缘光 — 球体与深色背景分离
- *   6. 底部焦散亮斑 — 光线穿过球体后在底部聚焦形成的亮点
+ *   2. 外部墨迹 — FBM 噪声斑块，表面不规则的墨色浸染
+ *   3. Lambert 漫反射 — 亮面/暗面基础立体感
+ *   4. Blinn-Phong 高光 — 湿表面光泽，自然过渡
+ *   5. 背光透射 — dot(N,-L) 让光线穿透球体后从暗面透出
+ *   6. Fresnel 边缘光 — 球体与深色背景分离
+ *   7. 底部焦散亮斑 — 光线穿过球体后在底部聚焦形成的亮点
  * ────────────────────────────────────────────── */
 
 export function createInkSphereMaterial(): THREE.ShaderMaterial {
@@ -19,15 +20,15 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
       // 墨色密度场 — 方向：左上浓墨区域
       uInkDir: { value: new THREE.Vector3(-0.4, 0.58, 0.28) },
       // 淡墨色（半透明灰蓝，右下区域）
-      uLightInk: { value: new THREE.Color('#4a6078') },
+      uLightInk: { value: new THREE.Color('#d8eef8') },
       // 浓墨色（实心黑墨，左上区域）
-      uDarkInk: { value: new THREE.Color('#0a0f16') },
+      uDarkInk: { value: new THREE.Color('#0a1018') },
       // 高光颜色
       uSpecColor: { value: new THREE.Color('#e8f6ff') },
       // Fresnel 边缘光颜色
       uFresnelColor: { value: new THREE.Color('#6098b8') },
       // 背光透射颜色
-      uBacklightColor: { value: new THREE.Color('#2a6090') },
+      uBacklightColor: { value: new THREE.Color('#78c8e8') },
 
       // ---- 参数 ----
       uAmbient: { value: 0.08 },
@@ -36,13 +37,15 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
       uSpecStrength: { value: 0.62 },
       uFresnelPower: { value: 5.5 },
       uFresnelStrength: { value: 0.14 },
-      uInkDensity: { value: 0.7 },
-      uInkSpread: { value: 0.55 },
+      uInkDensity: { value: 0.22 },
+      uInkSpread: { value: 0.18 },
       uBacklightStrength: { value: 0.48 },
-      uOpacity: { value: 0.78 },
+      uOpacity: { value: 0.18 },
       // 呼吸动画 — 时间与幅度
       uTime: { value: 0.0 },
       uBreathAmplitude: { value: 0.0 },
+      // 外部墨迹强度
+      uInkMarksStrength: { value: 0.18 },
     },
     transparent: true,
     depthWrite: false,
@@ -53,31 +56,17 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
       uniform float uTime;
       uniform float uBreathAmplitude;
 
-      // 简单伪随机 hash，用于打破正弦波的规律性
-      float hash(vec3 p) {
-        return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
-      }
-
-      // ══════════════════════════════════════════════════
-      // 位移函数 — 给定球面上的方向 dir，返回该点的径向位移量
-      //   提取为独立函数，以便多次采样做有限差分
-      // ══════════════════════════════════════════════════
       float computeDisplacement(vec3 dir) {
-        float wave1  = sin(dir.y * 2.4 + uTime * 0.85)        * 0.030;
-        wave1       += cos(dir.z * 1.9 + uTime * 0.595)      * 0.018;
-        wave1       += sin(dir.x * 2.1 + uTime * 1.105)      * 0.022;
+        // 波1 — 大尺度缓慢波澜（主导）
+        float wave1 = sin(dir.y * 1.6 + uTime * 0.35) * 0.040;
 
-        float wave2  = sin(dir.x * 3.7 + uTime * 1.16)        * cos(dir.y * 3.3 - uTime * 0.87)   * 0.020;
-        wave2       += cos(dir.z * 4.1 + uTime * 1.74)        * sin(dir.x * 2.8 - uTime * 1.305)  * 0.016;
-        wave2       += sin(dir.y * 3.5 - uTime * 1.595)       * cos(dir.z * 3.9 + uTime * 0.725)  * 0.018;
+        // 波2 — 横向缓慢涟漪
+        float wave2 = sin(dir.x * 2.2 + uTime * 0.42) * cos(dir.z * 1.8 - uTime * 0.38) * 0.026;
 
-        float wave3  = sin(dir.x * 7.3 + uTime * 2.6)         * cos(dir.y * 6.8 - uTime * 1.82)   * 0.009;
-        wave3       += cos(dir.z * 8.1 - uTime * 1.3)         * sin(dir.x * 7.5 + uTime * 2.08)   * 0.007;
+        // 波3 — 极细微高频涟漪（仅在最表层）
+        float wave3 = sin(dir.x * 5.5 + uTime * 1.1) * cos(dir.y * 5.2 - uTime * 0.9) * 0.008;
 
-        float randomPhase = hash(dir * 3.7) * 6.283;
-        float waveR = sin(uTime * 0.95 + randomPhase) * 0.008;
-
-        return (wave1 + wave2 + wave3 + waveR) * uBreathAmplitude;
+        return (wave1 + wave2 + wave3) * uBreathAmplitude;
       }
 
       void main() {
@@ -141,6 +130,27 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
       uniform float uInkSpread;
       uniform float uBacklightStrength;
       uniform float uOpacity;
+      uniform float uInkMarksStrength;
+
+      // ═══ 3D 噪声 ═══
+      float hash3D(vec3 p) {
+        return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453);
+      }
+      float noise3D(vec3 p) {
+        vec3 i = floor(p); vec3 f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(mix(hash3D(i), hash3D(i+vec3(1,0,0)), f.x),
+              mix(hash3D(i+vec3(0,1,0)), hash3D(i+vec3(1,1,0)), f.x), f.y),
+          mix(mix(hash3D(i+vec3(0,0,1)), hash3D(i+vec3(1,0,1)), f.x),
+              mix(hash3D(i+vec3(0,1,1)), hash3D(i+vec3(1,1,1)), f.x), f.y),
+          f.z);
+      }
+      float fbm(vec3 p) {
+        float v = 0.0; float a = 0.5; vec3 shift = vec3(100.0);
+        for (int i = 0; i < 3; i++) { v += a * noise3D(p); p = p * 2.0 + shift; a *= 0.5; }
+        return v;
+      }
 
       void main() {
         vec3 N = normalize(vNormal);
@@ -168,13 +178,33 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
         vec3 bodyColor = mix(uLightInk, uDarkInk, inkDensity);
 
         // ══════════════════════════════════════════════════
-        // 2. Lambert 漫反射 — 表面明暗
+        // 2. 外部墨迹 — FBM 噪声在球面上的墨色斑块
+        // ══════════════════════════════════════════════════
+        float markScale = 3.5;
+        float markNoise = fbm(vWorldPos * markScale);
+        float markNoise2 = fbm(vWorldPos * markScale * 1.7 + vec3(3.0, 5.0, 2.0));
+        float markNoise3 = fbm(vWorldPos * markScale * 2.5 + vec3(-4.0, 1.0, 3.0));
+
+        // 阈值化 → 形成离散的墨斑（带柔边）
+        float blotch1 = smoothstep(0.45, 0.60, markNoise);
+        float blotch2 = smoothstep(0.42, 0.58, markNoise2);
+        float blotch3 = smoothstep(0.48, 0.62, markNoise3);
+
+        float markDensity = (blotch1 * 0.5 + blotch2 * 0.32 + blotch3 * 0.18) * uInkMarksStrength;
+
+        // 墨斑融入体色
+        bodyColor = mix(bodyColor, uDarkInk, markDensity);
+        // 墨斑处墨色密度也提升
+        inkDensity = clamp(inkDensity + markDensity * 0.5, 0.0, 1.0);
+
+        // ══════════════════════════════════════════════════
+        // 3. Lambert 漫反射 — 表面明暗
         // ══════════════════════════════════════════════════
         float NdotL = max(dot(N, L), 0.0);
         float diffuse = uAmbient + NdotL * uDiffuseStrength;
 
         // ══════════════════════════════════════════════════
-        // 3. Blinn-Phong 高光 — 湿表面光泽
+        // 4. Blinn-Phong 高光 — 湿表面光泽
         // ══════════════════════════════════════════════════
         vec3 H = normalize(L + V);
         float spec = pow(max(dot(N, H), 0.0), uSpecPower) * uSpecStrength;
@@ -183,7 +213,7 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
         float softSpec = pow(max(dot(N, H), 0.0), uSpecPower * 0.06) * uSpecStrength * 0.08;
 
         // ══════════════════════════════════════════════════
-        // 4. 背光透射 — 水珠"晶莹剔透"的核心
+        // 5. 背光透射 — 水珠"晶莹剔透"的核心
         //    光线进入球体 → 穿透 → 从暗面射出
         //    墨色密度越低（越透明），透射越强
         // ══════════════════════════════════════════════════
@@ -197,7 +227,7 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
         backTransmission += caustic;
 
         // ══════════════════════════════════════════════════
-        // 5. Fresnel 边缘光
+        // 6. Fresnel 边缘光
         // ══════════════════════════════════════════════════
         float fresnel = 1.0 - abs(dot(N, V));
         float rim = pow(fresnel, uFresnelPower) * uFresnelStrength;
@@ -205,7 +235,7 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
         float rimSoft = pow(fresnel, uFresnelPower * 3.0) * uFresnelStrength * 0.10;
 
         // ══════════════════════════════════════════════════
-        // 6. 合成
+        // 7. 合成
         // ══════════════════════════════════════════════════
         vec3 color = bodyColor * diffuse;
         color += uBacklightColor * backTransmission;
@@ -233,6 +263,7 @@ export function updateInkSphereUniforms(
   inkSpread: number,
   backlight: number,
   opacity: number,
+  inkMarksStrength: number,
   time?: number,
   breathAmplitude?: number
 ) {
@@ -244,6 +275,7 @@ export function updateInkSphereUniforms(
   mat.uniforms.uInkSpread.value = inkSpread
   mat.uniforms.uBacklightStrength.value = backlight
   mat.uniforms.uOpacity.value = opacity
+  mat.uniforms.uInkMarksStrength.value = inkMarksStrength
   if (time !== undefined) mat.uniforms.uTime.value = time
   if (breathAmplitude !== undefined) mat.uniforms.uBreathAmplitude.value = breathAmplitude
 }

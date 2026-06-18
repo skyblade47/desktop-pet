@@ -1,7 +1,7 @@
 import React from 'react'
 import { Canvas } from '@react-three/fiber'
 import WaterSphere from './WaterSphere'
-import type { V2StageParams } from './types'
+import type { V2StageParams, BackgroundMode } from './types'
 import * as THREE from 'three'
 
 interface V2PetStageProps {
@@ -9,7 +9,13 @@ interface V2PetStageProps {
 }
 
 const V2PetStage: React.FC<V2PetStageProps> = ({ params }) => {
-  const background = `rgba(4, 8, 14, ${params.backgroundIntensity})`
+  const backgroundColors: Record<BackgroundMode, string> = {
+    dark: `rgba(4, 8, 14, ${params.backgroundIntensity})`,
+    light: `rgba(240, 240, 240, ${params.backgroundIntensity})`,
+    wood: `rgba(232, 220, 200, ${params.backgroundIntensity})`,
+  }
+
+  const background = backgroundColors[params.backgroundMode]
 
   return (
     <div
