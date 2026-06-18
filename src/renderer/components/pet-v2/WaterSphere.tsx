@@ -6,6 +6,7 @@ import { createInkSphereMaterial, updateInkSphereUniforms } from './shaders/wate
 import Bubbles from './Bubbles'
 import InkBlob from './InkBlob'
 import Eyes from './Eyes'
+import InkTrails from './InkTrails'
 
 interface WaterSphereProps {
   params: WaterSphereParams
@@ -162,6 +163,12 @@ const WaterSphere: React.FC<WaterSphereProps> = ({ params }) => {
 
       {/* 双眼 */}
       <Eyes />
+
+      {/* 外部墨迹飘带 */}
+      <InkTrails
+        sphereRadius={params.radius}
+        strength={params.inkMarksStrength}
+      />
     </group>
   )
 }

@@ -45,7 +45,7 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
       uTime: { value: 0.0 },
       uBreathAmplitude: { value: 0.0 },
       // 外部墨迹强度
-      uInkMarksStrength: { value: 0.18 },
+      uInkMarksStrength: { value: 0.35 },
     },
     transparent: true,
     depthWrite: false,
@@ -180,17 +180,15 @@ export function createInkSphereMaterial(): THREE.ShaderMaterial {
         // ══════════════════════════════════════════════════
         // 2. 外部墨迹 — FBM 噪声在球面上的墨色斑块
         // ══════════════════════════════════════════════════
-        float markScale = 3.5;
-        float markNoise = fbm(vWorldPos * markScale);
-        float markNoise2 = fbm(vWorldPos * markScale * 1.7 + vec3(3.0, 5.0, 2.0));
-        float markNoise3 = fbm(vWorldPos * markScale * 2.5 + vec3(-4.0, 1.0, 3.0));
+        float markNoise = fbm(vWorldPos * 4.5);
+        float markNoise2 = fbm(vWorldPos * 6.0 + vec3(3.0, 5.0, 2.0));
+        float markNoise3 = fbm(vWorldPos * 8.0 + vec3(-4.0, 1.0, 3.0));
 
-        // 阈值化 → 形成离散的墨斑（带柔边）
-        float blotch1 = smoothstep(0.45, 0.60, markNoise);
-        float blotch2 = smoothstep(0.42, 0.58, markNoise2);
-        float blotch3 = smoothstep(0.48, 0.62, markNoise3);
+        float blotch1 = smoothstep(0.35, 0.65, markNoise);
+        float blotch2 = smoothstep(0.32, 0.62, markNoise2);
+        float blotch3 = smoothstep(0.38, 0.68, markNoise3);
 
-        float markDensity = (blotch1 * 0.5 + blotch2 * 0.32 + blotch3 * 0.18) * uInkMarksStrength;
+        float markDensity = (blotch1 * 0.4 + blotch2 * 0.35 + blotch3 * 0.25) * uInkMarksStrength * 0.0;
 
         // 墨斑融入体色
         bodyColor = mix(bodyColor, uDarkInk, markDensity);

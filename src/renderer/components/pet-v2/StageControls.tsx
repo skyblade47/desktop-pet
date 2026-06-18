@@ -73,7 +73,7 @@ const StageControls: React.FC<StageControlsProps> = ({ params, onChange }) => {
         label="外部墨迹"
         value={params.sphere.inkMarksStrength}
         min={0}
-        max={0.5}
+        max={1}
         step={0.01}
         onChange={(v) => updateSphere('inkMarksStrength', v)}
       />

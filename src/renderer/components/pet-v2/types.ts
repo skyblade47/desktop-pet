@@ -35,7 +35,7 @@ export const DEFAULT_WATER_SPHERE_PARAMS: WaterSphereParams = {
   bubbleCount: 12,
   blobSize: 0.72,
   blobDensity: 0.8,
-  inkMarksStrength: 0.18,
+  inkMarksStrength: 0.35,
 }
 
 export const DEFAULT_V2_STAGE_PARAMS: V2StageParams = {
