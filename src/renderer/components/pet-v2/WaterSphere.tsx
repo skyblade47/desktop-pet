@@ -5,6 +5,7 @@ import type { WaterSphereParams } from './types'
 import { createInkSphereMaterial, updateInkSphereUniforms } from './shaders/waterSphereMaterial'
 import Bubbles from './Bubbles'
 import InkBlob from './InkBlob'
+import InkBlobFlow from './InkBlobFlow'
 
 interface WaterSphereProps {
   params: WaterSphereParams
@@ -156,8 +157,26 @@ const WaterSphere: React.FC<WaterSphereProps> = ({ params }) => {
         sphereRadius={params.radius}
       />
 
-      {/* 墨团 */}
-      <InkBlob params={{ blobSize: params.blobSize, blobDensity: params.blobDensity }} />
+        {/* 墨团 */}
+        {params.blobFlowEnabled ? (
+          <InkBlobFlow
+            params={{
+              enabled: true,
+              count: params.blobFlowCount,
+              repulsion: params.blobRepulsion,
+              damping: params.blobDamping,
+              spring: params.blobSpring,
+              brownian: params.blobBrownian,
+              sphereRadius: params.radius,
+              density: params.blobDensity,
+              surfaceTension: params.blobSurfaceTension,
+              mergeThreshold: params.blobMergeThreshold,
+              splitChance: params.blobSplitChance,
+            }}
+          />
+        ) : (
+          <InkBlob params={{ blobSize: params.blobSize, blobDensity: params.blobDensity }} />
+        )}
     </group>
   )
 }

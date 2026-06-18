@@ -14,6 +14,19 @@ export interface WaterSphereParams {
   blobSize: number
   blobDensity: number
   inkMarksStrength: number
+  /** 墨团流动参数 */
+  blobFlowEnabled: boolean
+  blobFlowCount: number
+  blobRepulsion: number
+  blobDamping: number
+  blobSpring: number
+  blobBrownian: number
+  /** 表面张力（0-1），越大墨团越倾向于相互靠近形成整体 */
+  blobSurfaceTension: number
+  /** 合并阈值（0-1），越大墨团越容易合并 */
+  blobMergeThreshold: number
+  /** 分裂概率（0-1），越大墨团越容易分裂 */
+  blobSplitChance: number
 }
 
 export interface V2StageParams {
@@ -36,6 +49,15 @@ export const DEFAULT_WATER_SPHERE_PARAMS: WaterSphereParams = {
   blobSize: 0.72,
   blobDensity: 0.8,
   inkMarksStrength: 0.35,
+  blobFlowEnabled: true,
+  blobFlowCount: 5,
+  blobRepulsion: 0.45,
+  blobDamping: 0.3,
+  blobSpring: 0.25,
+  blobBrownian: 0.12,
+  blobSurfaceTension: 0.35,
+  blobMergeThreshold: 0.5,
+  blobSplitChance: 0.5,
 }
 
 export const DEFAULT_V2_STAGE_PARAMS: V2StageParams = {

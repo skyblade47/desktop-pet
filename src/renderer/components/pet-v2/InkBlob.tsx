@@ -121,7 +121,7 @@ const MICRO_BLOB_COUNT = 4
 
 const InkBlob: React.FC<InkBlobProps> = ({ params }) => {
   const mainRef = useRef<THREE.Mesh>(null)
-  const microRefs = useRef<(THREE.Mesh | null)[]>(new Array(MICRO_BLOB_COUNT).fill(null))
+  const microRefs = useRef<(THREE.Mesh | null)[]>(Array.from({ length: MICRO_BLOB_COUNT }, () => null))
   const material = useMemo(() => createInkBlobMaterial(), [])
 
   const totalBaseScale = 0.15 + params.blobSize * 0.5

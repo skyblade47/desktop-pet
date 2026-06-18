@@ -150,6 +150,95 @@ const StageControls: React.FC<StageControlsProps> = ({ params, onChange }) => {
         onChange={(v) => updateSphere('fresnelStrength', v)}
       />
 
+      {/* ─── 墨团流动物理控制 ─── */}
+
+      <div className="v2-stage-controls__section-header">墨团流动物理</div>
+
+      <label className="v2-stage-controls__checkbox-label">
+        <input
+          type="checkbox"
+          checked={params.sphere.blobFlowEnabled}
+          onChange={(e) => updateSphere('blobFlowEnabled', e.target.checked)}
+        />
+        <span>启用物理流动</span>
+      </label>
+
+      {params.sphere.blobFlowEnabled && (
+        <>
+          <SliderRow
+            label="墨团数量"
+            value={params.sphere.blobFlowCount}
+            min={2}
+            max={8}
+            step={1}
+            onChange={(v) => updateSphere('blobFlowCount', v)}
+          />
+
+          <SliderRow
+            label="墨团排斥力"
+            value={params.sphere.blobRepulsion}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => updateSphere('blobRepulsion', v)}
+          />
+
+          <SliderRow
+            label="流体阻尼"
+            value={params.sphere.blobDamping}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => updateSphere('blobDamping', v)}
+          />
+
+          <SliderRow
+            label="中心聚合力"
+            value={params.sphere.blobSpring}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => updateSphere('blobSpring', v)}
+          />
+
+          <SliderRow
+            label="布朗扰动"
+            value={params.sphere.blobBrownian}
+            min={0}
+            max={0.5}
+            step={0.01}
+            onChange={(v) => updateSphere('blobBrownian', v)}
+          />
+
+          <SliderRow
+            label="表面张力"
+            value={params.sphere.blobSurfaceTension}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => updateSphere('blobSurfaceTension', v)}
+          />
+
+          <SliderRow
+            label="合并阈值"
+            value={params.sphere.blobMergeThreshold}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => updateSphere('blobMergeThreshold', v)}
+          />
+
+          <SliderRow
+            label="分裂概率"
+            value={params.sphere.blobSplitChance}
+            min={0}
+            max={1}
+            step={0.01}
+            onChange={(v) => updateSphere('blobSplitChance', v)}
+          />
+        </>
+      )}
+
       <div className="v2-stage-controls__mode-switch">
         <span>背景模式</span>
         <div className="v2-stage-controls__mode-buttons">
