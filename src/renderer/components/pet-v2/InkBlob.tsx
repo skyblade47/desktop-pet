@@ -124,10 +124,11 @@ const InkBlob: React.FC<InkBlobProps> = ({ params }) => {
   const microRefs = useRef<(THREE.Mesh | null)[]>(new Array(MICRO_BLOB_COUNT).fill(null))
   const material = useMemo(() => createInkBlobMaterial(), [])
 
-  const baseScale = 0.15 + params.blobSize * 0.5
-  const microBaseScale = baseScale * 0.32
+  const totalBaseScale = 0.15 + params.blobSize * 0.5
+  // 微团的基准大小 = 主团的 38%，分裂时可长到 60%
+  const microBaseScale = totalBaseScale * 0.38
 
-  // 微团相位偏移量 — 每个微团有自己的起始相位
+  // 每个微团的随机相位
   const phases = useMemo(() => Array.from({ length: MICRO_BLOB_COUNT }, () => Math.random() * Math.PI * 2), [])
 
   useFrame((state) => {
@@ -138,49 +139,51 @@ const InkBlob: React.FC<InkBlobProps> = ({ params }) => {
     const mainCy = 0.2 + Math.sin(t * 0.4 + 2.1) * 0.06
     const mainCz = 0.08 + Math.cos(t * 0.35 + 1.3) * 0.07
 
+    // ─── 罗夏分裂力 ───
+    const raw = Math.sin(t * 0.22 + 0.3) * 0.55 + Math.sin(t * 0.31 + 1.8) * 0.35
+    // clamp01-ish：峰值时刻分裂力 ≈ 1，谷底 ≈ 0
+    const splitForce = Math.max(0, raw * 1.1 + 0.1)
+    // 平滑：分裂力 = 1 时主团缩至 55%，分裂力 = 0 时主团保持 100%
+    const splitFactor = Math.min(splitForce * 1.5, 1.0)
+
+    // ─── 主团缩放：分裂时缩小 ───
+    const mainScale = totalBaseScale * (1.0 - splitFactor * 0.45)
     if (mainRef.current) {
       mainRef.current.position.set(mainCx, mainCy, mainCz)
-      mainRef.current.scale.setScalar(baseScale)
+      mainRef.current.scale.setScalar(mainScale)
     }
 
-    // ─── 罗夏分裂驱动 ───
-    // 用两个正弦波叠加产生时强时弱的分裂力
-    const splitForce =
-      Math.sin(t * 0.22 + 0.3) * 0.55 + Math.sin(t * 0.31 + 1.8) * 0.35 + 0.1
-    const splitAmount = Math.max(0, splitForce) * 0.15
-
-    // ─── 微墨团位置 ───
+    // ─── 微团 ───
     for (let i = 0; i < MICRO_BLOB_COUNT; i++) {
       const ref = microRefs.current[i]
       if (!ref) continue
 
-      const phase = phases[i]
-      // 双侧对称：偶数右(+X)、奇数左(-X)
       const sign = i % 2 === 0 ? 1 : -1
+      const phase = phases[i]
 
-      // 微团围绕主团做小轨道运动 + 分离开关
-      const orbitAngle = t * 0.45 + phase
-      const orbitRadius = 0.04 + splitAmount * 0.6
+      // 分裂越强，微团离主团越远
+      const dist = 0.03 + splitFactor * 0.32
 
-      const ox = Math.cos(orbitAngle) * orbitRadius * 0.6
-      const oy = Math.sin(orbitAngle * 1.3) * orbitRadius * 0.5
-      const oz = Math.cos(orbitAngle * 0.8 + 1.0) * orbitRadius * 0.4
-
-      // 罗夏分裂：沿 X 向外推出
-      const splitX = sign * splitAmount
+      // 微团散布方向：双侧对称 + 上下微偏 + 前后微偏
+      const angleY = phase + splitFactor * 0.6
+      const spreadX = sign * dist
+      const spreadY = Math.sin(angleY) * dist * 0.5
+      const spreadZ = Math.cos(angleY) * dist * 0.35
 
       ref.position.set(
-        mainCx + ox + splitX,
-        mainCy + oy,
-        mainCz + oz
+        mainCx + spreadX,
+        mainCy + spreadY,
+        mainCz + spreadZ
       )
 
-      // 分裂时微团会变大一点点（拉伸感）
-      const microScale = microBaseScale * (1.0 + splitAmount * 1.8)
+      // 分裂力越强微团越大（"碎片"更明显）
+      const microScale = microBaseScale * (0.7 + splitFactor * 1.5)
       ref.scale.setScalar(microScale)
+
+      // 分裂力越强微团越不透明（不分裂时几乎看不见）
+      ref.visible = splitFactor > 0.06
     }
 
-    // 共享材质时间
     material.uniforms.uTime.value = t
     material.uniforms.uDensity.value = params.blobDensity
   })
@@ -188,7 +191,7 @@ const InkBlob: React.FC<InkBlobProps> = ({ params }) => {
   return (
     <group>
       {/* 主墨团 */}
-      <mesh ref={mainRef} position={[-0.15, 0.2, 0.08]} scale={baseScale}>
+      <mesh ref={mainRef} position={[-0.15, 0.2, 0.08]} scale={totalBaseScale}>
         <sphereGeometry args={[1, 48, 48]} />
         <primitive object={material} attach="material" />
       </mesh>
