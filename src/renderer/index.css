@@ -690,12 +690,16 @@ body {
 
 .v2-pet-stage::before {
   position: absolute;
-  inset: 12%;
+  inset: 0;
   pointer-events: none;
   content: '';
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.08), transparent 58%);
-  filter: blur(18px);
+  opacity: 0.55;
+  background:
+    radial-gradient(ellipse 38% 32% at 48% 52%, rgba(40, 80, 110, 0.14), transparent 68%),
+    radial-gradient(ellipse 30% 26% at 55% 44%, rgba(25, 55, 80, 0.15), transparent 72%),
+    radial-gradient(ellipse 22% 34% at 42% 55%, rgba(20, 45, 70, 0.12), transparent 60%),
+    radial-gradient(ellipse 35% 28% at 50% 48%, rgba(30, 70, 100, 0.08), transparent 78%),
+    radial-gradient(ellipse 18% 22% at 53% 41%, rgba(50, 100, 140, 0.06), transparent 55%);
 }
 
 .v2-preview-fallback {
@@ -751,6 +755,19 @@ body {
   font-size: 13px;
 }
 
+.v2-stage-controls__label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.v2-stage-controls__value {
+  color: #7fe7ff;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .v2-stage-controls input[type='range'] {
   width: 100%;
   accent-color: #7fe7ff;
@@ -772,4 +789,223 @@ body {
   line-height: 1.6;
   border-radius: 14px;
   background: rgba(143, 231, 255, 0.08);
+}
+
+.v2-stage-controls__mode-switch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.v2-stage-controls__mode-switch > span {
+  color: rgba(232, 247, 255, 0.82);
+  font-size: 13px;
+}
+
+.v2-stage-controls__mode-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.v2-stage-controls__mode-buttons button {
+  flex: 1;
+  padding: 6px 4px;
+  color: rgba(232, 247, 255, 0.62);
+  font-size: 12px;
+  border: 1px solid rgba(170, 236, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(143, 231, 255, 0.06);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.v2-stage-controls__mode-buttons button:hover {
+  background: rgba(143, 231, 255, 0.14);
+  color: rgba(232, 247, 255, 0.92);
+}
+
+.v2-stage-controls__mode-buttons button.is-active {
+  color: #08111c;
+  border-color: #7fe7ff;
+  background: #7fe7ff;
+  font-weight: 600;
+}
+
+.v2-preview-page--light {
+  color: #2a2a2a;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(180, 180, 180, 0.12), transparent 34%),
+    linear-gradient(135deg, #fafafa 0%, #e8e8e8 48%, #f5f5f5 100%);
+}
+
+.v2-preview-page--light .v2-preview-kicker {
+  color: #5a7a8a;
+}
+
+.v2-preview-page--light .v2-preview-hero h1 {
+  color: #1a1a1a;
+}
+
+.v2-preview-page--light .v2-preview-hero p {
+  color: rgba(30, 30, 30, 0.72);
+}
+
+.v2-preview-page--light .v2-stage-controls {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.v2-preview-page--light .v2-stage-controls__header span {
+  color: #5a7a8a;
+}
+
+.v2-preview-page--light .v2-stage-controls__header strong {
+  color: #1a1a1a;
+}
+
+.v2-preview-page--light .v2-stage-controls label {
+  color: rgba(30, 30, 30, 0.82);
+}
+
+.v2-preview-page--light .v2-stage-controls__value {
+  color: #4a7c9b;
+}
+
+.v2-preview-page--light .v2-stage-controls__mode-switch > span {
+  color: rgba(30, 30, 30, 0.82);
+}
+
+.v2-preview-page--light .v2-stage-controls__mode-buttons button {
+  color: rgba(30, 30, 30, 0.62);
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.v2-preview-page--light .v2-stage-controls__mode-buttons button:hover {
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(30, 30, 30, 0.92);
+}
+
+.v2-preview-page--light .v2-stage-controls__mode-buttons button.is-active {
+  color: #ffffff;
+  border-color: #4a7c9b;
+  background: #4a7c9b;
+}
+
+.v2-preview-page--light .v2-stage-controls__note {
+  color: rgba(30, 30, 30, 0.62);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.v2-preview-page--light .v2-pet-stage {
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow:
+    inset 0 0 80px rgba(0, 0, 0, 0.04),
+    0 24px 80px rgba(0, 0, 0, 0.1);
+}
+
+.v2-preview-page--light .v2-pet-stage::before {
+  opacity: 0.35;
+  background:
+    radial-gradient(ellipse 38% 32% at 48% 52%, rgba(40, 55, 70, 0.12), transparent 68%),
+    radial-gradient(ellipse 30% 26% at 55% 44%, rgba(30, 45, 60, 0.13), transparent 72%),
+    radial-gradient(ellipse 22% 34% at 42% 55%, rgba(35, 50, 65, 0.10), transparent 60%),
+    radial-gradient(ellipse 35% 28% at 50% 48%, rgba(25, 40, 55, 0.07), transparent 78%),
+    radial-gradient(ellipse 18% 22% at 53% 41%, rgba(60, 85, 110, 0.05), transparent 55%);
+}
+
+.v2-preview-page--light .v2-stage-controls__header {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+.v2-preview-page--wood {
+  color: #3a2a18;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(200, 180, 140, 0.18), transparent 34%),
+    linear-gradient(135deg, #f5efe0 0%, #e0d4b8 48%, #efe8d4 100%);
+}
+
+.v2-preview-page--wood .v2-preview-kicker {
+  color: #7a6040;
+}
+
+.v2-preview-page--wood .v2-preview-hero h1 {
+  color: #2a1a08;
+}
+
+.v2-preview-page--wood .v2-preview-hero p {
+  color: rgba(50, 35, 20, 0.72);
+}
+
+.v2-preview-page--wood .v2-stage-controls {
+  border-color: rgba(120, 90, 50, 0.14);
+  background: rgba(245, 239, 224, 0.78);
+  box-shadow: 0 8px 32px rgba(80, 50, 20, 0.1);
+}
+
+.v2-preview-page--wood .v2-stage-controls__header span {
+  color: #7a6040;
+}
+
+.v2-preview-page--wood .v2-stage-controls__header strong {
+  color: #2a1a08;
+}
+
+.v2-preview-page--wood .v2-stage-controls label {
+  color: rgba(50, 35, 20, 0.82);
+}
+
+.v2-preview-page--wood .v2-stage-controls__value {
+  color: #8b7355;
+}
+
+.v2-preview-page--wood .v2-stage-controls__mode-switch > span {
+  color: rgba(50, 35, 20, 0.82);
+}
+
+.v2-preview-page--wood .v2-stage-controls__mode-buttons button {
+  color: rgba(50, 35, 20, 0.62);
+  border-color: rgba(120, 90, 50, 0.12);
+  background: rgba(120, 90, 50, 0.05);
+}
+
+.v2-preview-page--wood .v2-stage-controls__mode-buttons button:hover {
+  background: rgba(120, 90, 50, 0.1);
+  color: rgba(50, 35, 20, 0.92);
+}
+
+.v2-preview-page--wood .v2-stage-controls__mode-buttons button.is-active {
+  color: #fffdf7;
+  border-color: #8b7355;
+  background: #8b7355;
+}
+
+.v2-preview-page--wood .v2-stage-controls__note {
+  color: rgba(50, 35, 20, 0.62);
+  background: rgba(120, 90, 50, 0.08);
+}
+
+.v2-preview-page--wood .v2-pet-stage {
+  border-color: rgba(120, 90, 50, 0.12);
+  box-shadow:
+    inset 0 0 80px rgba(120, 90, 50, 0.04),
+    0 24px 80px rgba(80, 50, 20, 0.12);
+}
+
+.v2-preview-page--wood .v2-pet-stage::before {
+  opacity: 0.40;
+  background:
+    radial-gradient(ellipse 38% 32% at 48% 52%, rgba(80, 55, 30, 0.12), transparent 68%),
+    radial-gradient(ellipse 30% 26% at 55% 44%, rgba(65, 40, 25, 0.13), transparent 72%),
+    radial-gradient(ellipse 22% 34% at 42% 55%, rgba(70, 48, 28, 0.10), transparent 60%),
+    radial-gradient(ellipse 35% 28% at 50% 48%, rgba(60, 42, 22, 0.07), transparent 78%),
+    radial-gradient(ellipse 18% 22% at 53% 41%, rgba(100, 70, 45, 0.05), transparent 55%);
+}
+
+.v2-preview-page--wood .v2-stage-controls__header {
+  border-bottom-color: rgba(120, 90, 50, 0.1);
 }

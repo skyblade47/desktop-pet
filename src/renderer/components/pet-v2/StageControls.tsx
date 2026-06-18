@@ -70,15 +70,6 @@ const StageControls: React.FC<StageControlsProps> = ({ params, onChange }) => {
       />
 
       <SliderRow
-        label="外部墨迹"
-        value={params.sphere.inkMarksStrength}
-        min={0}
-        max={1}
-        step={0.01}
-        onChange={(v) => updateSphere('inkMarksStrength', v)}
-      />
-
-      <SliderRow
         label="墨团大小"
         value={params.sphere.blobSize}
         min={0.05}
