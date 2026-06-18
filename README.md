@@ -2,9 +2,9 @@
 
 一个轻量级的 Electron 桌面应用，帮助你快速记录和完善灵感。
 
-**当前版本：** v0.1.3
+**当前版本：** v0.1.5
 
-> 本版本保留 V1 桌宠稳定实现，并为后续 V2 水墨水滴球动画研发清理类型检查阻塞。
+> 本版本保留 V1 桌宠稳定实现，并将 V2 Canvas 水墨球视觉拆分为可复用 `InkPet` 视觉内核。
 
 ## 功能特性
 
@@ -13,6 +13,7 @@
 - ✨ **灵感快速记录** - 一键保存灵感内容
 - 🔄 **单向数据同步** - 桌宠 → 灵感调酒师 → 写作教练
 - 🤖 **本地模型支持** - 支持 OpenAI 兼容的本地模型 API（如 Ollama, LM Studio）
+- 🖤 **V2 水墨视觉预览** - 通过 `?preview=v2` 独立预览 Canvas 水墨球视觉内核
 
 ## 技术栈
 
@@ -38,6 +39,20 @@ npm install
 npm run dev
 ```
 
+### V2 视觉预览
+
+如果本地 Electron 二进制不可用，可以先启动 renderer 预览来检查视觉内核：
+
+```bash
+npx vite --host 127.0.0.1 --port 5174 src/renderer
+```
+
+然后访问：
+
+```text
+http://127.0.0.1:5174/?preview=v2
+```
+
 ### 构建应用
 
 ```bash
@@ -56,7 +71,7 @@ npm run dist
 
 ## 项目结构
 
-```
+```text
 desktop-pet/
 ├── src/
 │   ├── main/              # Electron 主进程
@@ -81,7 +96,7 @@ desktop-pet/
 
 ## 数据同步流程
 
-```
+```text
 用户输入灵感
     ↓
 保存到本地
@@ -114,6 +129,8 @@ HTTP POST 到灵感调酒师 API
 - `ChatWindow.tsx` - 聊天窗口
 - `MessageBubble.tsx` - 消息气泡
 - `SettingsPanel.tsx` - 设置面板
+- `pet/InkPet.tsx` - V2 Canvas 水墨视觉组件
+- `pet/PetWindow.tsx` - V2 视觉预览窗口包装组件
 
 ### Hooks 开发
 
@@ -125,6 +142,13 @@ HTTP POST 到灵感调酒师 API
 ### 状态管理
 
 使用 Zustand 进行状态管理，Store 定义在 `src/renderer/store/useStore.ts`。
+
+## V2 视觉路线
+
+1. **v0.1.5 已完成**：拆分 `InkPet`、`ink-renderer`、`mood-config`、`types`，保持 `PetWindow` 为预览入口。
+2. **下一阶段**：完善状态切换预览、尺寸/透明背景/质量档位验证、视觉参数调优。
+3. **稳定后**：再考虑抽成共享包，供 desktop-pet 与 AI 写作教练共同复用。
+4. **最后接业务**：仅通过外层适配器传入 `mood`，不让视觉内核直接依赖业务 store、IPC 或同步逻辑。
 
 ## License
 

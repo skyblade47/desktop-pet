@@ -10,28 +10,52 @@
 
 ---
 
+## v0.1.5 视觉内核路线
+
+本阶段目标是先完成 V2 Canvas 水墨视觉内核的可复用边界，不进行抽包、不接业务逻辑。
+
+### 已完成
+
+| 文件路径                                      | 职责                                                                               |
+| --------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `src/renderer/components/pet/InkPet.tsx`      | 可复用 Canvas 水墨视觉组件，负责 canvas 生命周期、动画循环、mood 过渡和 FPS 自适应 |
+| `src/renderer/components/pet/ink-renderer.ts` | Canvas 绘制管线，负责球体、墨流、墨丝、眼睛、高光和折射边缘                        |
+| `src/renderer/components/pet/mood-config.ts`  | `idle / focused / blocked / achievement / rest` 状态配置和渲染常量                 |
+| `src/renderer/components/pet/types.ts`        | `PetMood`、`InkPetQuality`、`MoodConfig`、`InkPetProps` 等公共类型                 |
+| `src/renderer/components/pet/PetWindow.tsx`   | `?preview=v2` 预览窗口包装，不直接承载渲染细节                                     |
+
+### 下一步路线
+
+1. 增加 V2 视觉预览控制面板，用于切换 mood、尺寸和质量档位；
+2. 验证透明背景、窗口缩放、长时间运行和低帧率降级；
+3. 调优墨丝、内部墨流、眼睛和状态过渡；
+4. 视觉稳定后再评估共享包边界；
+5. 接入 desktop-pet 和 AI 写作教练时，只通过外层适配器传入 `mood`，视觉内核不依赖业务 store、IPC 或同步逻辑。
+
+---
+
 ## 文件结构映射
 
-| 文件路径 | 职责 |
-|---------|------|
-| `package.json` | 项目依赖和脚本 |
-| `tsconfig.json` | TypeScript 配置 |
-| `vite.config.ts` | Vite 构建配置 |
-| `electron-builder.json` | 应用打包配置 |
-| `src/main/main.ts` | Electron 主进程入口 |
-| `src/main/ipc.ts` | IPC 通信处理 |
-| `src/main/tray.ts` | 系统托盘管理 |
-| `src/main/sync.ts` | 数据同步服务 |
-| `src/preload/preload.ts` | 预加载脚本，暴露安全 API |
-| `src/renderer/App.tsx` | React 应用入口 |
-| `src/renderer/types/index.ts` | TypeScript 类型定义 |
-| `src/renderer/store/useStore.ts` | Zustand 状态管理 |
-| `src/renderer/hooks/useChat.ts` | 聊天逻辑 Hook |
-| `src/renderer/hooks/useLocalModel.ts` | 本地模型连接 Hook |
-| `src/renderer/components/FloatingWidget.tsx` | 浮动小部件组件 |
-| `src/renderer/components/ChatWindow.tsx` | 聊天窗口组件 |
-| `src/renderer/components/MessageBubble.tsx` | 消息气泡组件 |
-| `src/renderer/components/SettingsPanel.tsx` | 设置面板组件 |
+| 文件路径                                     | 职责                     |
+| -------------------------------------------- | ------------------------ |
+| `package.json`                               | 项目依赖和脚本           |
+| `tsconfig.json`                              | TypeScript 配置          |
+| `vite.config.ts`                             | Vite 构建配置            |
+| `electron-builder.json`                      | 应用打包配置             |
+| `src/main/main.ts`                           | Electron 主进程入口      |
+| `src/main/ipc.ts`                            | IPC 通信处理             |
+| `src/main/tray.ts`                           | 系统托盘管理             |
+| `src/main/sync.ts`                           | 数据同步服务             |
+| `src/preload/preload.ts`                     | 预加载脚本，暴露安全 API |
+| `src/renderer/App.tsx`                       | React 应用入口           |
+| `src/renderer/types/index.ts`                | TypeScript 类型定义      |
+| `src/renderer/store/useStore.ts`             | Zustand 状态管理         |
+| `src/renderer/hooks/useChat.ts`              | 聊天逻辑 Hook            |
+| `src/renderer/hooks/useLocalModel.ts`        | 本地模型连接 Hook        |
+| `src/renderer/components/FloatingWidget.tsx` | 浮动小部件组件           |
+| `src/renderer/components/ChatWindow.tsx`     | 聊天窗口组件             |
+| `src/renderer/components/MessageBubble.tsx`  | 消息气泡组件             |
+| `src/renderer/components/SettingsPanel.tsx`  | 设置面板组件             |
 
 ---
 
@@ -40,6 +64,7 @@
 ### Task 1: 项目初始化和基础配置
 
 **Files:**
+
 - Create: `package.json`
 - Create: `tsconfig.json`
 - Create: `vite.config.ts`
@@ -193,10 +218,7 @@ export default defineConfig({
   "directories": {
     "output": "release"
   },
-  "files": [
-    "out/**/*",
-    "package.json"
-  ],
+  "files": ["out/**/*", "package.json"],
   "win": {
     "target": ["nsis", "portable"],
     "icon": "build/icon.ico"
@@ -224,12 +246,11 @@ dist
 - [ ] **Step 8: 创建 Tailwind 配置文件**
 
 Create `tailwind.config.js`:
+
 ```javascript
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    './src/renderer/**/*.{js,ts,jsx,tsx}',
-  ],
+  content: ['./src/renderer/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {},
   },
@@ -239,6 +260,7 @@ export default {
 ```
 
 Create `postcss.config.js`:
+
 ```javascript
 export default {
   plugins: {
@@ -251,6 +273,7 @@ export default {
 - [ ] **Step 9: 创建启动脚本**
 
 Create `scripts/start.js`:
+
 ```javascript
 const { spawn } = require('child_process')
 const electron = require('electron')
@@ -265,14 +288,14 @@ const startVite = () => {
       stdio: 'inherit',
       shell: true,
     })
-    
+
     viteProcess.on('close', (code) => {
       if (electronProcess) {
         electronProcess.kill()
       }
       process.exit(code)
     })
-    
+
     setTimeout(resolve, 2000)
   })
 }
@@ -282,7 +305,7 @@ const startElectron = () => {
     cwd: process.cwd(),
     stdio: 'inherit',
   })
-  
+
   electronProcess.on('close', (code) => {
     process.exit(code)
   })
@@ -298,6 +321,7 @@ startVite().then(startElectron)
 ### Task 2: 创建类型定义和状态管理
 
 **Files:**
+
 - Create: `src/renderer/types/index.ts`
 - Create: `src/renderer/store/useStore.ts`
 
@@ -406,6 +430,7 @@ export const useAppStore = create&lt;ChatState &amp; ConfigState &amp; Inspirati
 ### Task 3: 创建 Electron 主进程
 
 **Files:**
+
 - Create: `src/main/main.ts`
 - Create: `src/main/ipc.ts`
 - Create: `src/main/tray.ts`
@@ -432,7 +457,7 @@ import { ipcMain } from 'electron'
 
 export const setupIPC = () =&gt; {
   ipcMain.handle('ping', () =&gt; 'pong')
-  
+
   ipcMain.on('log', (_, message: string) =&gt; {
     console.log('[Renderer]', message)
   })
@@ -449,9 +474,9 @@ let tray: Tray | null = null
 
 export const createTray = (mainWindow: BrowserWindow) =&gt; {
   const iconPath = path.join(__dirname, '../../build/icon.png')
-  
+
   tray = new Tray(iconPath)
-  
+
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '显示窗口',
@@ -474,10 +499,10 @@ export const createTray = (mainWindow: BrowserWindow) =&gt; {
       },
     },
   ])
-  
+
   tray.setToolTip('桌面宠物 - 灵感助手')
   tray.setContextMenu(contextMenu)
-  
+
   tray.on('click', () =&gt; {
     if (mainWindow.isVisible()) {
       mainWindow.hide()
@@ -501,14 +526,14 @@ export const destroyTray = () =&gt; {
 ```typescript
 export class SyncService {
   private static instance: SyncService
-  
+
   static getInstance(): SyncService {
     if (!SyncService.instance) {
       SyncService.instance = new SyncService()
     }
     return SyncService.instance
   }
-  
+
   async syncToInspirationBartender(inspiration: unknown, baseUrl: string): Promise&lt;boolean&gt; {
     try {
       const response = await fetch(`${baseUrl}/api/inspirations`, {
@@ -518,7 +543,7 @@ export class SyncService {
         },
         body: JSON.stringify(inspiration),
       })
-      
+
       return response.ok
     } catch (error) {
       console.error('Sync failed:', error)
@@ -562,7 +587,7 @@ const createWindow = () =&gt; {
   }
 
   mainWindow.setPosition(100, 100)
-  
+
   createTray(mainWindow)
   setupIPC()
 }
@@ -591,6 +616,7 @@ app.on('before-quit', () =&gt; {
 ### Task 4: 创建 React 渲染进程基础
 
 **Files:**
+
 - Create: `src/renderer/index.html`
 - Create: `src/renderer/index.css`
 - Create: `src/renderer/main.tsx`
@@ -599,18 +625,10 @@ app.on('before-quit', () =&gt; {
 - [ ] **Step 1: 创建 index.html**
 
 ```html
-&lt;!doctype html&gt;
-&lt;html lang="zh-CN"&gt;
-  &lt;head&gt;
-    &lt;meta charset="UTF-8" /&gt;
-    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0" /&gt;
-    &lt;title&gt;桌面宠物 - 灵感助手&lt;/title&gt;
-  &lt;/head&gt;
-  &lt;body&gt;
-    &lt;div id="root"&gt;&lt;/div&gt;
-    &lt;script type="module" src="/src/renderer/main.tsx"&gt;&lt;/script&gt;
-  &lt;/body&gt;
-&lt;/html&gt;
+&lt;!doctype html&gt; &lt;html lang="zh-CN"&gt; &lt;head&gt; &lt;meta charset="UTF-8" /&gt; &lt;meta name="viewport"
+content="width=device-width, initial-scale=1.0" /&gt; &lt;title&gt;桌面宠物 - 灵感助手&lt;/title&gt; &lt;/head&gt;
+&lt;body&gt; &lt;div id="root"&gt;&lt;/div&gt; &lt;script type="module" src="/src/renderer/main.tsx"&gt;&lt;/script&gt;
+&lt;/body&gt; &lt;/html&gt;
 ```
 
 - [ ] **Step 2: 创建 index.css**
@@ -627,9 +645,9 @@ app.on('before-quit', () =&gt; {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
@@ -688,6 +706,7 @@ export default App
 ### Task 5: 创建核心组件
 
 **Files:**
+
 - Create: `src/renderer/components/FloatingWidget.tsx`
 - Create: `src/renderer/components/ChatWindow.tsx`
 - Create: `src/renderer/components/MessageBubble.tsx`
@@ -1350,6 +1369,7 @@ export default SettingsPanel
 ### Task 6: 更新 package.json 添加 uuid 依赖
 
 **Files:**
+
 - Modify: `package.json`
 
 - [ ] **Step 1: 添加 uuid 依赖**
@@ -1378,12 +1398,13 @@ export default SettingsPanel
 ### Task 7: 创建基础资源文件
 
 **Files:**
+
 - Create: `build/icon.png` (placeholder note)
 - Create: `README.md`
 
 - [ ] **Step 1: 创建 README.md**
 
-```markdown
+````markdown
 # 桌面宠物 - 灵感助手
 
 一个轻量级的 Electron 桌面应用，帮助你快速记录和完善灵感。
@@ -1403,6 +1424,7 @@ export default SettingsPanel
 ```bash
 npm install
 ```
+````
 
 ### 开发模式
 
@@ -1435,7 +1457,8 @@ npm run dist
 - Zustand
 - Framer Motion
 - Lucide React
-```
+
+````
 
 ---
 
@@ -1451,13 +1474,14 @@ cd "d:\OneDrive\项目\desktop-pet"
 git init
 git add .
 git commit -m "feat: initial commit - desktop pet foundation"
-```
+````
 
 ---
 
 ## 计划自检
 
 ### 1. Spec 覆盖检查
+
 - ✅ 浮动小部件（Task 5）
 - ✅ 聊天窗口和消息气泡（Task 5）
 - ✅ 本地模型连接（Task 5）
@@ -1466,11 +1490,13 @@ git commit -m "feat: initial commit - desktop pet foundation"
 - ✅ Electron 主进程（Task 3）
 
 ### 2. 占位符检查
+
 - ✅ 无 TBD/TODO
 - ✅ 所有代码块完整
 - ✅ 所有文件路径明确
 
 ### 3. 类型一致性检查
+
 - ✅ 类型定义在 Task 2 中统一
 - ✅ 接口名称一致
 - ✅ 属性名一致

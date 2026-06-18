@@ -1,6 +1,6 @@
 {
   "name": "desktop-pet",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "桌面宠物 - 灵感助手",
   "main": "./out/main/main.js",
   "scripts": {
@@ -50,5 +50,9 @@
     "tailwindcss": "^4.3.0",
     "typescript": "^5.7.3",
     "vite": "^5.4.14"
+  },
+  "allowScripts": {
+    "electron@33.4.11": true,
+    "esbuild@0.21.5": true
   }
 }
